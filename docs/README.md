@@ -37,5 +37,6 @@ std::cout << "Hello!" << std::endl;
 
 A [link](another-page.md) to another page.
 Another [link](test-dir/page-in-dir.md) to page in a dir.
+A [link](test-dir/) to dir.
 
 
