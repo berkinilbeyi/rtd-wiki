@@ -9,3 +9,8 @@ source_parsers = {
 source_suffix = ['.md']
 
 master_doc = 'README'
+
+def setup(app):
+  app.add_config_value('recommonmark_config', {
+      'enable_auto_doc_ref': True}, True)
+  app.add_transform(AutoStructify)
