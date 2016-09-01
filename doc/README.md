@@ -12,6 +12,6 @@ import sys
 print "hello world"
 ```
 
-A [link](another-page) to another page.
-Another [link](test-dir/page-in-dir) to page in a dir.
+A [link](another-page.md) to another page.
+Another [link](test-dir/page-in-dir.md) to page in a dir.
 
