@@ -1,4 +1,5 @@
 from recommonmark.parser import CommonMarkParser
+from recommonmark.transform import AutoStructify
 
 # Berkin: This allows using markdown files using sphinx (see
 # http://docs.readthedocs.io/en/latest/getting_started.html#in-markdown)
