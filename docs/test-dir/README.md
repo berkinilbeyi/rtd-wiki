@@ -2,8 +2,8 @@
 
 Contents
 --------
-* [Dir](test-dir/)
-* [File in dir](test-dir/page-in-dir.md)
+* [Dir]()
+* [File in dir](page-in-dir.md)
 
 ## Foobar
 

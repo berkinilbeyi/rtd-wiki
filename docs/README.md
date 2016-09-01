@@ -5,7 +5,7 @@ This is the documentation homepage...
 Contents
 --------
 * [Another page](another-page.md)
-* [Dir](test-dir/)
+* [Dir](test-dir/README.md)
 * [Page in dir](test-dir/page-in-dir.md)
 
 ## List example
