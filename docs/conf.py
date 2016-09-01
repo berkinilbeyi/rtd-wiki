@@ -13,6 +13,9 @@ source_suffix = ['.md']
 master_doc = 'README'
 
 def setup(app):
+  # Berkin: The following is to allow the links with .md extension to be
+  # converted to .html when hosted on RtD. This seems to be a more recent
+  # feature so had to add a dependency for 0.4.0.
   app.add_config_value('recommonmark_config', {
       'enable_auto_doc_ref': True}, True)
   app.add_transform(AutoStructify)
