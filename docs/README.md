@@ -1,42 +1,16 @@
-# Welcome!
+# Welcome to BRG Wiki!
 
-This is the documentation homepage...
+This is the new BRG wiki that is compatible both with GitHub and Read The
+Docs.
 
-Contents
---------
-* [Another page](another-page.md)
-* [Dir](test-dir/README.md)
-* [Page in dir](test-dir/page-in-dir.md)
+[Link](test-page.md) to test page.
 
-## List example
+## Contents
 
-Here is a list:
-- Hello
-- World
-- Of items...
-
-## Code examples
-
-A python snippet:
-
-``` python
-import sys
-print "hello world"
-```
-
-### C++
-
-A C++ snippet:
-
-
-``` c++
-std::cout << "Hello!" << std::endl;
-```
-
-## Link examples
-
-A [link](another-page.md) to another page.
-Another [link](test-dir/page-in-dir.md) to page in a dir.
-A [link](test-dir/) to dir.
-
+* [Users](users/README.md): Directories for users. Journals and personal
+  notes go here.
+* [Tutorials](tutorials/README.md): Tutorials for common BRG tools and
+  infrastructures.
+* [Blog](blog/README.md): Interesting observations recorded in a blog
+  format.
 
