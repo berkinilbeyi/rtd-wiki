@@ -3,8 +3,6 @@
 This is the new BRG wiki that is compatible both with GitHub and Read The
 Docs.
 
-[Link](test-page.md) to test page.
-
 # Contents
 
 * [Users](users/README.md)
