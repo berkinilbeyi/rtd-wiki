@@ -5,7 +5,8 @@ Docs.
 
 [Link](test-page.md) to test page.
 
-## Contents
+Contents
+--------
 
 * [Users](users/README.md): Directories for users. Journals and personal
   notes go here.
