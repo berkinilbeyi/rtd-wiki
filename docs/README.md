@@ -5,13 +5,12 @@ Docs.
 
 [Link](test-page.md) to test page.
 
-Contents
---------
+# Contents
 
-* [Users](users/README.md): Directories for users. Journals and personal
-  notes go here.
-* [Tutorials](tutorials/README.md): Tutorials for common BRG tools and
-  infrastructures.
-* [Blog](blog/README.md): Interesting observations recorded in a blog
-  format.
+* [Users](users/README.md)
+* [Tutorials](tutorials/README.md)
+* [Blog](blog/README.md)
 
+Directories for users. Journals and personal notes go here.
+Tutorials for common BRG tools and infrastructures.
+Interesting observations recorded in a blog format.
