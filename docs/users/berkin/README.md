@@ -1,4 +1,4 @@
-# Personal Directory
+# Berkin's Personal Directory
 
 ## Notes (incomplete)
 
@@ -13,3 +13,6 @@
 * [SPEC results](spec_results.rst)
 * [XLOOPS app notes (txt)](xloops-app-notes.txt)
 
+## Journals
+
+* [8/29/2016](16-08-29.md)
