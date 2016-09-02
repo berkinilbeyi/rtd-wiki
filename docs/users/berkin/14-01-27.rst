@@ -1,0 +1,10 @@
+==========================================================================
+Journal entry for the week of January 27, 2014
+==========================================================================
+
+Fixing up for.m
+--------------------------------------------------------------------------
+
+The plan is to first revert back some stuff from the ISCA stuff, and
+rewrite things more cleanly.
+

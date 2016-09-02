@@ -1,0 +1,102 @@
+hello my name is berkin ilbeyi, a phd student from cornell university. i'm
+advised by christopher batten. today ill talk about pydgin, which is an
+extensible and fast instruction set simulator. pydgin was primarily
+developed by derek lockhart, who is at google now, and myself, and we have
+presented this work at ispass earlier last year as well as part of a
+tutorial at isca past summer.
+
+in this familiar picture of the software hardware stack, we have hardwarew
+at the bottom and software at the top, with the ISA as the contract
+between the two. instruction set simulators are primarily usedto provide a
+functional simulation of this hardware by simulating the isa semantics.
+traditioanlly, the four goals of an iss accuracy (usually just assumed to
+be there to be useful), performance (how fast can we simulate the
+hardware), productivity (how productive it is to change or add to the isa
+speciification), and observability (helps us to quantify characteristics
+about software running on hardware beyond program output, examples of
+which might be total instruction count, number of dynamic loads or stores,
+number of dynamic backward branches, number of times we had a misaligned
+load or store, or number of bit flips in the register file)
+
+now i'll briefly talk about the organizational structure of proprietary
+isas vs riscv, for the direction of change. as you can see on the left,
+proprietray isas are defeined and published by a vendor. and users of this
+isa, which consist of licensee chip makes, software developers, and
+researchers. the arrows indicate the direction of change. every ferw
+years, the vendor decides to extend the isa, so they release version 17 of
+this isa. the users, would usually use use an iss to see how they will go
+about adopting the new isa version. for these users, performance of the
+iss is important. productivity of the iss in this case is not very
+important, because there is a new major version, and vendor usually hase
+more than enough resources to implement the changes to the iss, however
+unporductive this process may be. observability is somewhat important for
+these users as they tune their software to take advantage of the new
+extensions.
+
+now, looking ath the riscv organizational schema, we can see some major
+differences. whereas the isa was specified by a vendor, now it's specified
+by risc-v foundation. the riscv isa is different is encouraging extensions
+to the riscv by these chip makers (which don't need to be licensees) and
+researchers. another big difference is that risc-v foundation actually
+consists of these very users. so anybody using this isa can much more
+directly effect change in the next generations of the isa. for these
+users, they also need an iss to benchmark their computation stack. they
+need performance to be able to run real-world benchmarks, they actually do
+need productivity so that they can easily add and experiment with new isa
+extensions, because they are developing specialized flavors of riscv, or
+becuase they have more "feedback" over the futre of the isa, and finally
+observability because they want to be able to quantify the benefit or
+shortcomings of the isa. we argue that the unique open source nature of
+riscv and its embracing of isa extensions make productivity and
+observability of the iss more important than ever. pydgin is a good tool
+to achieve these two qualities without giving up on performance.
+
+
+instruction set simulators 
+
+==========================================================================
+
+Hi, my name is Berkin Ilbeyi, a PhD student from Cornell University.
+Today, I'll talk about PYdgin for RISC-V: A Fast and Productive
+Instruction-Set Simulator. This work was done in collaboration with Derek
+Lockhart, who's currently at google, and Christopher Batten.
+
+In the computation stack, which constists of software and hardware,
+instruction set architecture, such as RISC-V, defines the interface
+between the two. To model the hardware functionally, for various kinds of
+experimentation, one needs an instruction set simulator.
+
+One of the most important goals of an instruction set simulator is
+performance. A high-performance instruction set simulator allows
+real-world benchmarks to be simulated in reasonable times. To give you a
+feel of typical performance numbers, interpretive simulators, the simplest
+type of simulator where every instruction is fetched, decoded, and
+executed, the performance is typically in the range of 1 to 10 millions of
+instructions per second, or MIPS. For a real-world benchmark that you
+might find in SPEC, using an interpretive simulator would take many days
+of simulation.  A much more sophisticated technique is dynamic binary
+translation, and these can get 100s of MIPS, or just a few hours of
+simulation. Finally, a very advanced DBT-based simulator, such as QEMU,
+can get 1000 MIPS.
+
+Another important goal of instruction set simulators is productivity,
+namely productive development to add support for new ISAs, productive
+extension to experiment with ISA extensions, and productively adding
+custom instrumentation to quantify the benefits of these extensions. There
+is a tension between productivity and performance, and most simulators
+deliver one of the two, but not both.
+
+Depending on the use case, both of these features might not be important.
+For instance, proprietary ISAs are developed by a single vendor, and have
+a single specification. The users of proprietary ISAs might not care too
+much about productive extension and instrumentation support of their
+simulator. However, RISC-V is quite different because it was developed
+with extensibility in mind, and encourages the users to do so. The users
+of RISC-V will likely experiment with domain-specific flavors of RISC-V,
+and for which they need these high-productivity features, and
+high-performance features of their simulators. We believe Pydgin is the
+right tool for this job.
+
+
+
+

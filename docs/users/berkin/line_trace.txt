@@ -1,0 +1,28 @@
+This document describes how to interpret line traces. It is intended to be a 
+quick and dirty way to interpret them.
+
+[X] 41f0| u slt  | slti >|      |      ::#mtvps[ffffffff] 1:addiu|0:addiu |-:      0:slti |3:addu  |2:addu  -:    S>    9   |      ^    -:  
+[X]#41f4|u #movn |#slt   |      |      ::#mtvps[ffffffff] 2:addiu|1:addiu |0:addiu 1:slti |0:slti  |3:addu  -:    S>    2   |       ^   -:  
+[X]#41f4|u #movn |#slt   |      |      :: mtvps[ffffffff]>3:addiu|2:addiu |1:addiu 2:slti |1:slti  |0:slti  -:    S>    3   |        ^  -:  
+[X] 41f4|u  movn | slt  >|      |      :: movz [ffffffff] 0:mtvps|3:addiu |2:addiu>3:slti |2:slti  |1:slti  -:    S>    4   |         ^ -:  
+[X] 41f8| u addu | movn >|      |      ::#addiu[ffffffff] 1:mtvps|0:mtvps |3:addiu 0:movz |3:slti  |2:slti  -:    S>    5   |  ^        -:  
+[X]#41fc| u#addiu|#addu  |      |      ::#addiu[ffffffff] 2:mtvps|1:mtvps |0:mtvps 1:movz |0:movz  |3:slti  -:    S>    6   |   ^       -:  
+[X]#41fc| u#addiu|#addu  |      |      :: addiu[ffffffff]>3:mtvps|2:mtvps |1:mtvps 2:movz |1:movz  |0:movz  -:    S>    7   |    ^      -:  
+[X] 41fc| u addiu| addu >|      |      :: slti [ffffffff] 0:addiu|3:mtvps |2:mtvps>3:movz |2:movz  |1:movz  -:    S>    8   |     ^     -:  
+[X]#4200|  #slti |#addiu |      |      ::#slt  [ffffffff] 1:addiu|0:addiu |3:mtvps 0:slti |3:movz  |2:movz  -:    S>    9   |      ^    -:  
+[X]#4200|  #slti |#addiu |      |      ::#slt  [ffffffff] 2:addiu|1:addiu |0:addiu 1:slti |0:slti  |3:movz  -:    S>    2   |       ^   -:  
+[X]#4200|  #slti |#addiu |      |      :: slt  [ffffffff]>3:addiu|2:addiu |1:addiu 2:slti |1:slti  |0:slti  -:    S>    3   |        ^  -:  
+[X] 4200|   slti | addiu>|      |      :: movn [ffffffff] 0:slt  |3:addiu |2:addiu>3:slti |2:slti  |1:slti  -:    S>    4   |         ^ -:
+ X - xloop                                      ffffffff - active uts
+   # - stall                                              0 - chime id
+   - - squash                                               stg0 |  stg1  |  stg2  - VAU0
+      PC - fetch                                                                                                  S - scalar memops (V - vector)
+         ua - uniform/affine of op 1 & 2                                                                                5 - each column is a different bank, number indicates which lane won the arbitration
+            decode                                                                                                                ^ - memory response, each column is a vector lane
+                  execute                                                                                                                  writeback
+                        > - issued to the SIMT lanes
+                          memory
+                                  wb
+       this side is control processor  ::      vector lane 0
+[X] 4200|   slti | addiu>|      |      :: movn [ffffffff] 0:slt  |3:addiu |2:addiu>3:slti |2:slti  |1:slti  -:    S>    4   |         ^ -:
+

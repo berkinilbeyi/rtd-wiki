@@ -1,0 +1,41 @@
+
+Maven apps (smaller PARC benchmarks)
+% cd maven-app-misc
+% mkdir build-maven
+% cd build-maven
+% ../configure --host=maven
+% make ubmark-vvadd
+
+
+Download PyPy source: https://bitbucket.org/pypy/pypy/downloads/pypy-4.0.1-src.tar.bz2
+
+Untar the PyPy source
+
+Clone Pydgin repo: https://github.com/cornell-brg/pydgin.git
+
+% cd pydgin/parc
+% python parc-sim.py -h
+% python parc-sim.py <parc binary>
+% python parc-sim.py ../../maven-app-misc/build-maven/ubmark-vvadd -h
+
+To translate, go to the pypy source that you untared:
+
+% cd pypy
+% export PYDGIN_PYPY_SRC_DIR=`pwd`
+
+Go back to pydgin dir
+
+% cd pydgin
+% mkdir build
+% cd build
+% ../scripts/build.py pydgin-parc-nojit-debug
+
+this is interpreter without JIT, debug enabled. The fastest interpreter is
+pydgin-parc-jit
+
+Try running ubmark-vvadd again:
+
+% cd ../parc
+% ./pydgin-parc-nojit-debug ../../maven-app-misc/build-maven/ubmark-vvadd -h
+% ./pydgin-parc-jit ../../maven-app-misc/build-maven/ubmark-vvadd -h
+

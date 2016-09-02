@@ -1,0 +1,37 @@
+
+
+SPEC benchmark directory:
+
+/work/bits0/bi45/misc/spec/cpu2006/
+
+SPEC benchmarks:
+
+/work/bits0/bi45/misc/spec/cpu2006/benchspec/CPU2006
+
+
+SPEC dataset sizes:
+
+- test (small)
+- ref  (long)
+
+
+<SPEC bmarks>/401.bzip2/run/run_base_test_maven-gcc44.0000
+
+<SPEC bmarks>/<bmark>/run/run_base_<dset>_<ISA>-gcc44.0000
+
+run commands are in this file: run_cmds.out
+
+example commands for 401.bzip2:
+
+# specinvoke r6392
+#  Invoked as: specinvoke -n
+# timer ticks over every 1000 ns
+# Use another -n on the command line to see chdir commands and env dump
+# Starting run for copy #0
+../run_base_test_maven-gcc44.0001/bzip2_base.maven-gcc44 input.program 5 > input.program.out 2>> input.program.err
+# Starting run for copy #0
+../run_base_test_maven-gcc44.0001/bzip2_base.maven-gcc44 dryer.jpg 2 > dryer.jpg.out 2>> dryer.jpg.err
+
+example command to run the first dataset using pydgin:
+
+% pydgin-parc-jit ../run_base_test_maven-gcc44.0001/bzip2_base.maven-gcc44 input.program 5

@@ -1,0 +1,90 @@
+--------------------------------------------------------------------------
+Re-installing maven stuff on Mavericks
+--------------------------------------------------------------------------
+
+For the past couple days, I've been trying to get the maven system working
+again locally on my mac. First, there was an issue with the GCC, which was
+fairly straightforward to fix. I experimented with compiling it with the
+builtin gcc-llvm and the macports gcc, but the issue was with unwind. Need
+to deactivate unwind in macports::
+
+  % sudo port deactivate libunwind-headers
+
+The more subtle bug was with the ISA simulator. gcc-llvm gave an error
+right away which seems to be due to stricter error reporting, so I tried
+macports gcc, versions 4.4, 4.6 and 4.7. I think 4.7 gave a different
+error message, but 4.4 and 4.6 gave an error::
+
+  g++-mp-4.6 -MMD -MP  -Wall -g -O3 -I. -I../common -I../sft -I../mips32 -I../maven -I../appsvr -c ../appsvr/simulator.cc
+  ../appsvr/simulator.cc: In static member function 'static int simulator_t::pack_argc_argv(uint8*, uint32_t, int, char**)':
+  ../appsvr/simulator.cc:142:12: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  ../appsvr/simulator.cc:144:16: error: lvalue required as left operand of assignment
+  make: *** [simulator.o] Error 1
+
+Looking at ``appsvr/simulator.cc``, ``buf[0] = HTONL(argc)`` was fine, but
+not ``buf[1] = HTONL(args_start + (argc+3)*sizeof(uint32_t))``. ``HTONL``
+macro is defined in ``common/host.h``. In there, depending on
+``TARGET_BIG_ENDIAN`` is set or not, it converts the native
+representations of half words, words or double words to the simulated
+(target) representations and back. Here, if a conversion is necessary,
+low-level inline assembly definitions are given. To debug this issue, one
+thing very helpful was to see what these erroring lines were turning into
+after the preprocessing step. Here, to make out life a little easier,
+instead of the above ``buf[1]`` definition, I used a variable to allow
+grepping in ``simulator.cc``::
+
+  int foobar = HTONL(args_start + (argc+3)*sizeof(uint32_t));
+
+This allows us to see exactly what this statement is turning into (the
+gcc flags are identical to the ones produced using the build system, the
+only addition is the ``-E`` flag)::
+
+  % g++-mp-4.6 -MMD -MP  -Wall -g -O3 -I. -I../common -I../sft -I../mips32 -I../maven -I../appsvr -c ../appsvr/simulator.cc -E | grep foobar
+
+  int foobar = (args_start + (argc+3)*sizeof(uint32_t)) = (__builtin_constant_p((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)) ? ((__uint32_t)((((__uint32_t)((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)) & 0xff000000) >> 24) | (((__uint32_t)((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)) & 0x00ff0000) >> 8) | (((__uint32_t)((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)) & 0x0000ff00) << 8) | (((__uint32_t)((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)) & 0x000000ff) << 24))) : _OSSwapInt32((__uint32_t)args_start + (argc+3)*sizeof(uint32_t)));
+
+As can be seen, the rvalue is turning into an assignment, which was
+causing the argument to ``HTONL`` to turn into an lvalue, and this is not
+legal. Another interesting thing is that the definition of ``foobar`` is
+different from the definitions in ``host.h``. After some googling around,
+I figured that ``htonl`` is function part of the C standard library. It's
+used to translate little endian host machines data types (e.g. x86) to big
+endian representations of the internet packets. Furthermore, in OSX, as
+opposed to Linux, ``HTONL`` (capital) macros are also defined (in
+``/usr/include/sys/_endian.h``) that do standalone assignments, which was
+causing the above translation. Since Linux doesn't have these capital
+versions defined (and possibly OSX before 10.9), it was compiling fine.
+
+Using this naming for target endianness is a very bad idea. The C library
+definitions of these conversions and the ISA simulator definitions are
+different. The library defines these as conversions strictly to big
+endian, while the simulator defines these to conversions to the target
+machine endianness, which could be big or small. Instead of this fake
+burrowing the name, we should be using much better naming that will
+prevent confusion and avoid naming conflict with the standard C library.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Fixing this issue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To fix this issue, I changed the name from "N" which I think stands for
+network, to "T", which stands for target. Here is the naming scheme::
+
+  HTONS  -> HTOTS
+  HTONL  -> HTOTL
+  HTONLL -> HTOTLL
+  NTOHS  -> TTOHS
+  NTOHL  -> TTOHL
+  NTOHLL -> TTOHLL
+
+To replace these, we can use ``perl`` as following::
+
+  % perl -pi -e "s/HTON/HTOT/g" `find *`
+  % perl -pi -e "s/NTOH/TTOH/g" `find *`
+
+

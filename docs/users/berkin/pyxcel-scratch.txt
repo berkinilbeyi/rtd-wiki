@@ -1,0 +1,95 @@
+RPython traceback:
+  File "pydgin_sim.c", line 4483, in portal
+  File "rpython_jit_metainterp_warmstate.c", line 948, in maybe_compile_and_run__star_4
+  File "rpython_jit_metainterp_warmstate.c", line 1154, in bound_reached__star_4
+  File "rpython_jit_metainterp_pyjitpl.c", line 1422, in compile_and_run_once___rpython_jit_metainterp_ji
+  File "rpython_jit_metainterp_pyjitpl.c", line 2519, in MetaInterp__compile_and_run_once
+  File "rpython_jit_metainterp_pyjitpl.c", line 3641, in MetaInterp_interpret
+  File "rpython_jit_metainterp_pyjitpl.c", line 4959, in MetaInterp__interpret
+  File "rpython_jit_metainterp_pyjitpl.c", line 5629, in MIFrame_run_one_step
+  File "rpython_jit_metainterp_pyjitpl.c", line 24949, in MIFrame_opimpl_jit_merge_point
+  File "rpython_jit_metainterp_pyjitpl.c", line 39086, in MetaInterp_reached_loop_header
+  File "rpython_jit_metainterp_pyjitpl.c", line 50800, in MetaInterp_compile_loop
+  File "rpython_jit_metainterp_compile.c", line 5926, in compile_loop
+  File "rpython_jit_metainterp_inliner.c", line 1983, in Inliner_inline_op
+  File "rpython_jit_metainterp_inliner.c", line 2998, in Inliner_inline_snapshot
+  File "rpython_rtyper_lltypesystem_rordereddict.c", line 40526, in ll_dict_getitem__dicttablePtr_objectPtr_1
+~~~ Crash in JIT! <KeyError object at 0xa67ad8>
+Aborted
+
+[bogus immutable array declaration: <ArrayP 8>]
+RPython traceback:
+  File "pydgin_sim.c", line 1770, in entry_point
+  File "rpython_jit_metainterp_warmspot.c", line 91, in ll_portal_runner__Signed_Signed_machine_StatePtr
+  File "pydgin_sim.c", line 4314, in portal
+  File "rpython_jit_metainterp_warmspot.c", line 653, in crash_in_jit
+Fatal RPython error: BogusPureField
+
+
+
+  /work/bits0/bi45/vc/git-brg/pydgin-pyxcel/arm/pydgin-arm-nojit -e PYPYLOG=jit,gc:ai_mini-pydgin-arm-omit1-post.pypylog -e PYXCEL_IN_FILE=omit1.in /work/bits0/bi45/vc/hg-misc/pypy-cross/pypy/goal/pypy-jit-arm-nofp-omit1 bm_ai_mini.py | tee ai_mini_pydgin_analysis_omit1_post.out
+
+
+./jitlog_analyze.py --asm --color --no-dmp --use-rw --pydgin-out pypy-benchmarks/unladen_swallow/performance/ai_mini_pydgin_analysis_omit1_post.out pypy-benchmarks/unladen_swallow/performance/ai_mini-pydgin-arm-omit1-post.pypylog
+
+
+[(0, 4, 7, 5, 2, 6, 1, 3), (0, 5, 7, 2, 6, 3, 1, 4), (0, 6, 3, 5, 7, 1, 4, 2), (0, 6, 4, 7, 1, 3, 5, 2), (1, 3, 5, 7, 2, 0, 6, 4), (1, 4, 6, 0, 2, 7, 5, 3), (1, 4, 6, 3, 0, 7, 5, 2), (1, 5, 0, 6, 3, 7, 2, 4), (1, 5, 7, 2, 0, 3, 6, 4), (1, 6, 2, 5, 7, 4, 0, 3), (1, 6, 4, 7, 0, 3, 5, 2), (1, 7, 5, 0, 2, 4, 6, 3), (2, 0, 6, 4, 7, 1, 3, 5), (2, 4, 1, 7, 0, 6, 3, 5), (2, 4, 1, 7, 5, 3, 6, 0), (2, 4, 6, 0, 3, 1, 7, 5), (2, 4, 7, 3, 0, 6, 1, 5), (2, 5, 1, 4, 7, 0, 6, 3), (2, 5, 1, 6, 0, 3, 7, 4), (2, 5, 1, 6, 4, 0, 7, 3), (2, 5, 3, 0, 7, 4, 6, 1), (2, 5, 3, 1, 7, 4, 6, 0), (2, 5, 7, 0, 3, 6, 4, 1), (2, 5, 7, 0, 4, 6, 1, 3), (2, 5, 7, 1, 3, 0, 6, 4), (2, 6, 1, 7, 4, 0, 3, 5), (2, 6, 1, 7, 5, 3, 0, 4), (2, 7, 3, 6, 0, 5, 1, 4), (3, 0, 4, 7, 1, 6, 2, 5), (3, 0, 4, 7, 5, 2, 6, 1), (3, 1, 4, 7, 5, 0, 2, 6), (3, 1, 6, 2, 5, 7, 0, 4), (3, 1, 6, 2, 5, 7, 4, 0), (3, 1, 6, 4, 0, 7, 5, 2), (3, 1, 7, 4, 6, 0, 2, 5), (3, 1, 7, 5, 0, 2, 4, 6), (3, 5, 0, 4, 1, 7, 2, 6), (3, 5, 7, 1, 6, 0, 2, 4), (3, 5, 7, 2, 0, 6, 4, 1), (3, 6, 0, 7, 4, 1, 5, 2), (3, 6, 2, 7, 1, 4, 0, 5), (3, 6, 4, 1, 5, 0, 2, 7), (3, 6, 4, 2, 0, 5, 7, 1), (3, 7, 0, 2, 5, 1, 6, 4), (3, 7, 0, 4, 6, 1, 5, 2), (3, 7, 4, 2, 0, 6, 1, 5), (4, 0, 3, 5, 7, 1, 6, 2), (4, 0, 7, 3, 1, 6, 2, 5), (4, 0, 7, 5, 2, 6, 1, 3), (4, 1, 3, 5, 7, 2, 0, 6), (4, 1, 3, 6, 2, 7, 5, 0), (4, 1, 5, 0, 6, 3, 7, 2), (4, 1, 7, 0, 3, 6, 2, 5), (4, 2, 0, 5, 7, 1, 3, 6), (4, 2, 0, 6, 1, 7, 5, 3), (4, 2, 7, 3, 6, 0, 5, 1), (4, 6, 0, 2, 7, 5, 3, 1), (4, 6, 0, 3, 1, 7, 5, 2), (4, 6, 1, 3, 7, 0, 2, 5), (4, 6, 1, 5, 2, 0, 3, 7), (4, 6, 1, 5, 2, 0, 7, 3), (4, 6, 3, 0, 2, 7, 5, 1), (4, 7, 3, 0, 2, 5, 1, 6), (4, 7, 3, 0, 6, 1, 5, 2), (5, 0, 4, 1, 7, 2, 6, 3), (5, 1, 6, 0, 2, 4, 7, 3), (5, 1, 6, 0, 3, 7, 4, 2), (5, 2, 0, 6, 4, 7, 1, 3), (5, 2, 0, 7, 3, 1, 6, 4), (5, 2, 0, 7, 4, 1, 3, 6), (5, 2, 4, 6, 0, 3, 1, 7), (5, 2, 4, 7, 0, 3, 1, 6), (5, 2, 6, 1, 3, 7, 0, 4), (5, 2, 6, 1, 7, 4, 0, 3), (5, 2, 6, 3, 0, 7, 1, 4), (5, 3, 0, 4, 7, 1, 6, 2), (5, 3, 1, 7, 4, 6, 0, 2), (5, 3, 6, 0, 2, 4, 1, 7), (5, 3, 6, 0, 7, 1, 4, 2), (5, 7, 1, 3, 0, 6, 4, 2), (6, 0, 2, 7, 5, 3, 1, 4), (6, 1, 3, 0, 7, 4, 2, 5), (6, 1, 5, 2, 0, 3, 7, 4), (6, 2, 0, 5, 7, 4, 1, 3), (6, 2, 7, 1, 4, 0, 5, 3), (6, 3, 1, 4, 7, 0, 2, 5), (6, 3, 1, 7, 5, 0, 2, 4), (6, 4, 2, 0, 5, 7, 1, 3), (7, 1, 3, 0, 6, 4, 2, 5), (7, 1, 4, 2, 0, 6, 3, 5), (7, 2, 0, 5, 1, 4, 6, 3), (7, 3, 0, 2, 5, 1, 6, 4)]
+
+
+base
+1 812 974 774
+safe_guards
+
+base
+1817905041
+safe_guards
+1817887450
+
+base
+1883298888
+safe_guards
+1902141059
+safe_guard_slice
+1928681834
+
+
+base
+1798999178
+guard_true only
+1799707547
++guard_false
+1794994654
+safe_guard
+1684623198
+safe_guard_slice
+1610307370
+
+
+segfault on safe_guards
+removed id 700039, now failing with:
+RPython traceback:
+  File "pypy_module_pypyjit_interp_jit.c", line 255, in jump_absolute__AccessDirect_None
+  File "rpython_jit_metainterp_warmstate.c", line 3318, in maybe_compile_and_run__star_5
+  File "rpython_jit_metainterp_warmstate.c", line 7650, in execute_assembler__star_2_1
+  File "rpython_jit_metainterp_warmspot.c", line 7740, in handle_jitexception_1
+~~~ Crash in JIT! <OpErrFmt object at 0xafb2d5d0>
+
+
+RPython traceback:
+  File "pypy_interpreter_generator.c", line 1304, in portal_1
+  File "rpython_jit_metainterp_warmstate.c", line 961, in maybe_compile_and_run__star_4
+  File "rpython_jit_metainterp_warmstate.c", line 2657, in bound_reached__star_4
+  File "rpython_jit_metainterp_pyjitpl.c", line 2365, in compile_and_run_once___rpython_jit_metainterp_ji_1
+  File "rpython_jit_metainterp_pyjitpl.c", line 3608, in MetaInterp__compile_and_run_once
+  File "rpython_jit_metainterp_pyjitpl.c", line 6509, in MetaInterp_interpret
+  File "rpython_jit_metainterp_pyjitpl.c", line 12062, in MetaInterp__interpret
+  File "rpython_jit_metainterp_pyjitpl.c", line 15433, in MIFrame_run_one_step
+  File "rpython_jit_metainterp_pyjitpl.c", line 75225, in MIFrame_opimpl_jit_merge_point
+  File "rpython_jit_metainterp_pyjitpl.c", line 109569, in MetaInterp_reached_loop_header
+  File "rpython_jit_metainterp_pyjitpl.c", line 136964, in MetaInterp_compile_loop
+  File "rpython_jit_metainterp_compile.c", line 10949, in compile_loop
+  File "rpython_jit_metainterp_compile.c", line 22237, in send_loop_to_backend
+  File "rpython_jit_backend_arm_assembler.c", line 1751, in AssemblerARM_assemble_loop
+  File "rpython_jit_backend_arm_assembler.c", line 5933, in AssemblerARM__walk_operations
+  File "rpython_jit_backend_arm_opassembler.c", line 24146, in ResOpAssembler_int_add_impl
+~~~ Crash in JIT! <ValueError object at 0xaa2890>

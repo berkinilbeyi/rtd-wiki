@@ -1,0 +1,103 @@
+ISPASS papers
+--------------------------------------------------------------------------
+
+- Full Spead Ahead
+- ESESC
+- SimNow
+- COTSon
+- MARSS
+
+-- Schnarr and Larus on memoization ASPLOS 1998
+-- Sandberg et al. "Full-Speed Ahead" IISWC 2015
+-- Brankovic and Gonzalez CGO 2014
+-- Nigel Topham PLDI 2011
+-- Wisconsin Wind Tunnel project
+-- cross-binary SimPoint: ISPASS 2007
+
+A. Sandberg, N. Nikoleris, T. E. Carlson, E. Hagersten, S. Kaxiras, D.
+Black-Schaffer. Full Speed Ahead: Detailed Architectural Simulation at
+Near-Native Speed. IEEE International Symposium on Workload
+Characterization (IISWC), Oct 2015.
+
+E. K. Ardestani and J. Renau. ESESC: A Fast Multicore Simulator Using
+Time-Based Sampling. IEEE International Symposium on High Performance
+Computer Architecture (HPCA), Feb 2013.
+
+R. Bedichek. SimNow: Fast Platform Simulation Purely in Software. Hot
+Chips, Aug 2004.
+
+E. Argollo, A. Falcon, P. Faraboschi, M. Monchiero, and D. Ortega. COTSon:
+Infrastructure for Full System Simulation. ACM SIGOPS Operating Systems
+Review, Jan 2009.
+
+A. Patel, F. Afram, S. Chen, and K. Ghose. MARSS: A Full System Simulator
+for Multicore x86 CPUs. Design Automation Conference (DAC), Jun 2011.
+
+E. Schnarr and J. R. Larus. Fast Out-of-order PRocessor Simulation using
+Memoization. Architectural Support for PRogramming Languages and Operating
+Systems (ASPLOS), Oct 1998.
+
+  The authors use native-on-native (SPARC) simulation with
+  functional/timing split for OoO processor simulation. They can use the
+  native execution for the functional exection, and at a basic-block
+  level, they simulate the instruction stream on a microarchitecture
+  simulator. They also use memoization to cache the current processor
+  configuration (the state of the IQ, compressed) and which actions were
+  taken. When the same PC and IQ state matches the processor action cache,
+  they can skip the detailed simulation part. They call this
+  "fast-forwarding".
+
+A. Brankovic, K. Stavrou, E. Gibert, A. Gonzalez. Warm-Up Smulation
+Methodology for HW/SW Co-Designed Processors. IEEE/ACM International
+Symposium on Code Generation and Optimization (CGO), Feb 2014.
+
+  The authors look into simulation in the domain of HW/SW co-designed
+  processors. These processors are very similar to JIT execution. There is
+  a transparent optimization layer (TOL) that sits below the OS, and is
+  transparent to the software stack. As hot regions of code are
+  discovered, these regions are dynamically optimized like JIT. Simulating
+  these using checkpoint-based simulation methodologies causes issues
+  because detailed warmup in these schemes only warm up the
+  microarchitecture, not the TOL. Hence, the TOL might not have been fully
+  warmed up, which causes the code that is simulated in detail not to have
+  gone through all the possible stages of TOL optimizations. The authors
+  look into different warmup schemes for the simulator to ensure that the
+  TOL is warmed up. They also look into the scheme where programs are
+  never checkpointed (always start from the beginning), however they deem
+  this to be very slow if the sample of interest is towards the end of
+  execution. PydginFF is a complementary technique where TOL warmup from
+  the beginning is no longer slow.
+
+I. Bohm, T. J. K. Edler von Koch, S. C. Kyle, B. Franke, N. Topham.
+Generalized Just-in-time Trace Compilation Using a Parallel Task Farm in a
+Dynamic Binary Translator. ACM SIGPLAN Conference on Programming Language
+Design and Implementation (PLDI), Jun 2011.
+
+  Not very relevant. Like the title, this is more about actually making
+  JIT compilation more efficient and parallel. Our research is not about
+  making JIT better, but more applicable to the computer architecture
+  community in the context of architectural simulators.
+
+S. K. Reinhardt, M. D. Hill, J. R. Larus, A. R. Lebeck, J. C. Lewis, and
+D. A. Wood. The Wisconsin Wind Tunnel: Virtual Prototyping of Parallel
+Computers. ACM SIGMETRICS Conference on Measurement and Modeling of
+Computer Systems (SIGMETRICS), May 1993.
+
+S. S. Mukherjee, S. K. Reinhardt, B. Falsafi, M. Litzkow, M. D. Hill, D.
+A. Wood, S. Huss-Lederman, J. R. Larus. Wisconsin Wind Tunnel II: A Fast,
+Portable Parallel Architecture Simulator. IEEE Concurrency, vol. 8, no. 4,
+pp. 12-20, Oct-Dec 2000.
+
+  Somewhat related, early work on direct execution to speed up simulation.
+  Does not support ISAs other than the host (?).
+
+E. Perelman, J. Lau, H. PAtil, A. Jaleel, G. Hamerly, and B. Calder. Cross
+Binary Simulation Points. IEEE International Symposium on Performance
+Analysis of Systems and Software (ISPASS), Apr 2007.
+
+  Identifies the need to compare programs with different ISAs or different
+  binaries of the same program (due to different compiler optimizations
+  etc.). Using SimPoint to compare these could be inaccurate because the
+  samples might correspond to different program phases. The authors
+  introduce a mechanism to ensure the simulation points match across the
+  two binaries.

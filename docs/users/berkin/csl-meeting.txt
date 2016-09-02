@@ -1,0 +1,26 @@
+==========================================================================
+CSL Meeting Presentation on PBBS
+==========================================================================
+
+
+Title: The Problem Based Benchmark Suite
+Abstract:
+As important as engineering new architectural improvements, evaluating
+these designs is crucial in architecture research. Evaluation most often
+happens with the help of a suite of benchmarks that provides a realistic
+and diverse workloads which also acts as a reference point to compare
+different systems. There are numerous benchmark suites for researchers to
+use, some general purpose, such as SPEC, while others are domain specific,
+such as MediaBench. Vast majority of these benchmarks are code-based,
+where the code and the algorithm is not supposed to be modified.
+Problem-based benchmarks, such as The Problem Based Benchmark Suite (PBBS)
+by Shun et al, instead provide problem definitions, a set of inputs, and
+verification utilities. In addition, PBBS provides reference serial and
+parallel implementations for most of the benchmarks, however, it
+encourages researchers to solve the problem using different algorithms,
+techniques or languages. In this talk, we will introduce PBBS, the
+underlying design philosophy, and talk about some of the problems and
+algorithms in this benchmark suite. Our goal for this talk is to spark
+discussion within CSL about the benchmarks we use and trust everyday, and
+to potentially encourage researchers to add PBBS to their collection of
+benchmarks.

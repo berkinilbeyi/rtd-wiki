@@ -1,0 +1,65 @@
+==========================================================================
+CV notes
+==========================================================================
+
+Name and stuff...
+
+--------------------------------------------------------------------------
+Education
+--------------------------------------------------------------------------
+
+2012-present Cornell University PhD
+             Advisor: Christopher Batten
+
+2008-2012    Lafayette College, Easton, PA
+             GPA...
+
+2003-2008    Robert College of Istanbul, Istanbul, Turkey
+
+--------------------------------------------------------------------------
+Publications
+--------------------------------------------------------------------------
+
+XLOOPS (under review)
+
+Undergraduate Honors thesis
+
+VCache
+
+--------------------------------------------------------------------------
+Research experience
+--------------------------------------------------------------------------
+
+Python accelerator: ...
+
+XLOOPS: Researched minimal extensions to the ISA to encode inter-iteration
+loop dependence patterns
+
+Undergraduate thesis: ...
+
+Workload porting to Flexus: ...
+
+--------------------------------------------------------------------------
+Industry experience
+--------------------------------------------------------------------------
+
+Software Development Engineer Intern at Amazon
+
+--------------------------------------------------------------------------
+Teaching experience
+--------------------------------------------------------------------------
+
+Teaching assistant for ECE 4750
+
+Peer tutor for introductory computer science classes
+
+--------------------------------------------------------------------------
+Honors and awards
+--------------------------------------------------------------------------
+
+H.C. Torng Fellowship
+
+Graduation awards
+
+Honor societies: 
+

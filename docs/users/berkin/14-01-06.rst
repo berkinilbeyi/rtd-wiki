@@ -1,0 +1,109 @@
+--------------------------------------------------------------------------
+``pkernel`` compilation note
+--------------------------------------------------------------------------
+
+When I was trying to get the cycle level simulator working, I found out it
+wasn't working. It turns out it was due to pkernel new memory mapping. I
+had pulled everything from scratch and rebuilt (simply using ``make``)
+including the cross compiler and pkernel. Turns out since the compiler
+itself had changed regarding some of the memory mapping stuff, simply
+running ``make`` in pkernel did not reflect all of the changes. Running
+``make clean`` and then ``make fixed the issue.
+
+--------------------------------------------------------------------------
+``warshall``
+--------------------------------------------------------------------------
+
+TODO: talk about the issues etc
+
+* scalar num cycles: 804916
+* tloops inner cycles: 249195 (conf: 17408, lane job: 209242)
+* tloops middle cycles: 198999 (conf: 704, lane job: 191942)
+* tloops transparent cycles: 803985
+
+Seems like the more optimal version is faster than 4X. Not sure how...
+
+Inner for.u::
+
+    1ee8:       70511802        mul     v1,v0,s1
+    1eec:       24040000        li      a0,0
+    1ef0:       70912802        mul     a1,a0,s1
+    1ef4:       24070000        li      a3,0
+    1ef8:       00a23021        addu    a2,a1,v0
+    1efc:       080007d0        j       1f40
+    1f00:       00e34021        addu    a4,a3,v1
+    1f04:       00060880        sll     at,a2,0x2
+    1f08:       00084080        sll     a4,a4,0x2
+    1f0c:       02010821        addu    at,s0,at
+    1f10:       02084021        addu    a4,s0,a4
+    1f14:       8c210000        lw      at,0(at)
+    1f18:       8d080000        lw      a4,0(a4)
+    1f1c:       46080840        add.s   at,at,a4
+    1f20:       00e54021        addu    a4,a3,a1
+    1f24:       24e70001        addiu   a3,a3,1
+    1f28:       00084080        sll     a4,a4,0x2
+    1f2c:       02084021        addu    a4,s0,a4
+    1f30:       8d090000        lw      a5,0(a4)
+    1f34:       46014abc        c.lt.s  a6,a5,at
+    1f38:       012a080b        movn    at,a5,a6
+    1f3c:       ad010000        sw      at,0(a4)
+    1f40:       c4f1ffef        for.u   a3,s1,1f00
+    1f44:       24840001        addiu   a0,a0,1
+    1f48:       1491ffe9        bne     a0,s1,1ef0
+    1f4c:       24420001        addiu   v0,v0,1
+    1f50:       1451ffe5        bne     v0,s1,1ee8
+
+Middle for.u::
+
+    1ee8:       70511802        mul     v1,v0,s1
+    1eec:       24040000        li      a0,0
+    1ef0:       080007d2        j       1f48
+    1ef4:       70912802        mul     a1,a0,s1
+    1ef8:       24070000        li      a3,0
+    1efc:       00a23021        addu    a2,a1,v0
+    1f00:       00e34021        addu    a4,a3,v1
+    1f04:       00060880        sll     at,a2,0x2
+    1f08:       00084080        sll     a4,a4,0x2
+    1f0c:       02010821        addu    at,s0,at
+    1f10:       02084021        addu    a4,s0,a4
+    1f14:       8c210000        lw      at,0(at)
+    1f18:       8d080000        lw      a4,0(a4)
+    1f1c:       46080840        add.s   at,at,a4
+    1f20:       00e54021        addu    a4,a3,a1
+    1f24:       24e70001        addiu   a3,a3,1
+    1f28:       00084080        sll     a4,a4,0x2
+    1f2c:       02084021        addu    a4,s0,a4
+    1f30:       8d090000        lw      a5,0(a4)
+    1f34:       46014abc        c.lt.s  a6,a5,at
+    1f38:       012a080b        movn    at,a5,a6
+    1f3c:       ad010000        sw      at,0(a4)
+    1f40:       14f1ffef        bne     a3,s1,1f00
+    1f44:       24840001        addiu   a0,a0,1
+    1f48:       c491ffea        for.u   a0,s1,1ef4
+    1f4c:       24420001        addiu   v0,v0,1
+    1f50:       1451ffe5        bne     v0,s1,1ee8
+
+Looking at the stats and line traces, there seems to be some performance
+lost due to the memory loads (RAW hazards). The stats also show that. My
+hypothesis is that due to the memory arbitration which is round robin, and
+due to the subsequent ``lw`` instructions, different lanes are always
+within one or two cycles of each other, causing to conflict again in the
+next iteration. Parallelizing outer loop allows more time for threads to
+settle into a globally non-conflicting memory access pattern, while the
+shorter inner loop doesn't have enough time to settle before control goes
+back to the control processor and lanes start from scratch (from
+conflicting states).
+
+My proposal is to use a different arbitration mechanism in the memory
+system, maybe it prioritizes the smallest iteration index??
+
+OK, turns out that the arbitration mechanism I've been using was random.
+Maybe round robin arbitration will be better??
+
+Implemented round robin and fixed arbitration in addition to the random
+arbiter that was in place before. The results are in
+~/work/misc/plot/stats10-arb.out.png. You can see that the fixed
+arbitration helps a lot especially for a few apps such as strsearch,
+warshall, cmult, rgb2cmyk (5-10%).
+
+

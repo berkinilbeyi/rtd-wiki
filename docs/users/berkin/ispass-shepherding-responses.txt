@@ -1,0 +1,133 @@
+> Below is a summary of the major concerns brought up by the reviewers
+> about this work.
+> 
+> --- Better explain the key novelties of this paper. While updating Table
+> I, as suggested in your response, is a good start, focusing more on the
+> key novelties and differentiators is a needed step.
+
+Updated Table I to include a new row called "Native-on-native fast-forward
+(NNFF)-Based Sampling" to capture previous work in the spirit of Full
+Speed Ahead. These approaches do provide fast, accurate, and _partially_
+agile simulation. As the paragraph 5 (a new paragraph) in the Introduction
+explains, these approaches are partially agile for studies involving
+software and microarchitecture, but not the hardware/software interface.
+Also added a new paragraph in the Related Work section (paragraph 5) that
+compares PydginFF to FSA, COTSon etc.
+
+> --- In a related concern from the reviewers, mentioning in a more
+> detailed way the specific use cases of this methodology, would be
+> appreciated (the limitations being that new instructions or
+> architectures are typically not fast-forward-able, for example). 
+
+The paragraphs mentioned above (paragraph 5 of the Introduction, paragraph
+5 of the Related Work) also highlight the use cases of PydginFF that
+differentiates itself from other related work. Also gave examples of how
+this tool can be used in the last paragraph of the Introduction. In
+particular, here is how we distinguish our work from FSA (and similar):
+"Unlike related NNFF-based sampling approaches [NNFF is defined in the
+paper for native-on-native fast-forward-based sampling], our work allows
+the entire computation stack to be modified in an agile manner. We
+anticipate this approach would be par- ticularly useful for radical
+hardware acceleration techniques to improve the performance of emerging
+workloads where the software is not static (e.g., just-in-time compilation
+and optimization techniques) and studying ISA extensions."
+
+> --- Better comparing your work to prior, related work. There are many
+> prior works that have been mentioned in the reviews that have not been
+> referenced or clearly compared to. These works should be taken into
+> account and compared to this work.
+
+Added many of the suggested related work in the Related Work section and
+the more relevant ones (e.g., FSA, COTSon) in the Introduction section. In
+particular, added the following new references:
+
+A. Sandberg, N. Nikoleris, T. E. Carlson, E. Hagersten, S. Kaxiras, D.
+Black-Schaffer. Full Speed Ahead: Detailed Architectural Simulation at
+Near-Native Speed. IEEE International Symposium on Workload
+Characterization (IISWC), Oct 2015.
+
+E. K. Ardestani and J. Renau. ESESC: A Fast Multicore Simulator Using
+Time-Based Sampling. IEEE International Symposium on High Performance
+Computer Architecture (HPCA), Feb 2013.
+
+R. Bedichek. SimNow: Fast Platform Simulation Purely in Software. Hot
+Chips, Aug 2004.
+
+E. Argollo, A. Falcon, P. Faraboschi, M. Monchiero, and D. Ortega. COTSon:
+Infrastructure for Full System Simulation. ACM SIGOPS Operating Systems
+Review, Jan 2009.
+
+A. Patel, F. Afram, S. Chen, and K. Ghose. MARSS: A Full System Simulator
+for Multicore x86 CPUs. Design Automation Conference (DAC), Jun 2011.
+
+E. Schnarr and J. R. Larus. Fast Out-of-order PRocessor Simulation using
+Memoization. Architectural Support for PRogramming Languages and Operating
+Systems (ASPLOS), Oct 1998. 
+
+A. Brankovic, K. Stavrou, E. Gibert, A. Gonzalez. Warm-Up Smulation
+Methodology for HW/SW Co-Designed Processors. IEEE/ACM International
+Symposium on Code Generation and Optimization (CGO), Feb 2014.
+
+S. K. Reinhardt, M. D. Hill, J. R. Larus, A. R. Lebeck, J. C. Lewis, and
+D. A. Wood. The Wisconsin Wind Tunnel: Virtual Prototyping of Parallel
+Computers. ACM SIGMETRICS Conference on Measurement and Modeling of
+Computer Systems (SIGMETRICS), May 1993.
+
+S. S. Mukherjee, S. K. Reinhardt, B. Falsafi, M. Litzkow, M. D. Hill, D.
+A. Wood, S. Huss-Lederman, J. R. Larus. Wisconsin Wind Tunnel II: A Fast,
+Portable Parallel Architecture Simulator. IEEE Concurrency, vol. 8, no. 4,
+pp. 12-20, Oct-Dec 2000.
+
+E. Perelman, J. Lau, H. Patil, A. Jaleel, G. Hamerly, and B. Calder. Cross
+Binary Simulation Points. IEEE International Symposium on Performance
+Analysis of Systems and Software (ISPASS), Apr 2007.
+
+> --- Strongly consider removing the unimportant header files and code
+> that does not significantly add to the paper (possibly Figure 3, 4, 5,
+> or reducing their size / etc.). Figure 3 in the previous ISPASS Pydgin
+> work does a much better job at providing an overview. Although detailed
+> in the previous work, providing an overview in this work, especially
+> with respect to how fast-forwarding / embedding works with gem5 would be
+> helpful.  Figure 2 is explained briefly, but a deep-dive with respect to
+> what code the user needs to write (cache simulator?) or which pieces you
+> see as extensible, versus which components are part of PydginFF, and are
+> not going to be updated by the user (normally) would go a long way to
+> bring non-JIT experts up to speed quickly so that they know what code is
+> being written by them (cache simulator) and being transformed into
+> low-level code RPython translation, etc. In short, this could be seen as
+> an expanded response to Reviewer A ‘arm-interpreter-in-python’.
+
+Removed Figure 3 as suggested since it only showed the API. Completely
+re-did Figure 2 to remove some of the unnecessary details (header, object
+files etc.) and instead focused on illustrating how PydginFF builds off of
+Pydgin and the RPython translation toolchain. Changed the text of section
+III.B to talk about how, at a high level, Pydgin, PydginFF, and detailed
+simulators interact. Kept Figure 4 and 5 mostly the same with better
+function names. Added a new Figure 3 that captures JIT-FFI at a high
+level, how users can add instrumentation, and what do these
+instrumentations get translate to in the JIT trace. Changed the text of
+V.B slightly to clarify what code will users need to do and how will
+their instrumentation code get triggered (using PydginFF hooks,
+instrument_inst, instrument_memop etc.).
+
+> --- Zero-copy access to architectural state has been demonstrated in
+> FSA.
+
+We have acknowledged this fact in the paragraph 5 of the Related Work. We
+have also made the last paragraph the Introduction clearer that our
+contribution in zero-copy state transfer is specifically in context of
+DBT-based ISSs (which FSA is not).
+
+> --- Addressing other various comments and concerns raised by the
+> reviewers and integrating the solutions (including those from the
+> response) into the paper.
+
+There were reviewer concerns regarding the JIT performance for
+set-associative cache modeling. We have implemented a more optimized cache
+model. There was also concerns regarding the applicability of our
+technique for modeling L2 caches. We have added new results in Figure 8 to
+show the performance of the more optimized set-associative cache
+performance and L1+L2 set-associative caches. We have also added a new
+paragraph (paragraph 3) in section V.D regarding a more optimized
+set-associative cache model and L2 caches. We have also mentioned that
+PydginFF will be released as an open-source project in the Conclusion.

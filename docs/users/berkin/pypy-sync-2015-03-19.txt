@@ -1,0 +1,289 @@
+[09:41] == berkin [8054e0f3@gateway/web/freenode/ip.128.84.224.243] has joined #pypy-sync
+[09:41] -ChanServ- [#pypy] Welcome!
+[09:43] == fijal_ [~fijal@105-208-229-220.access.mtnbusiness.co.za] has joined #pypy-sync
+[09:44] <fijal_> dmlockhart: ok, I'm around
+[09:46] <dmlockhart> fijal_: okay I'll gather the troops
+[09:46] <fijal_> cfbolz can't come unfortunately
+[09:53] == dmlockha_ [~dmlockhar@nat-128-84-124-0-361.cit.cornell.edu] has joined #pypy-sync
+[09:55] == dmlockh__ [~dmlockhar@nat-128-84-124-0-361.cit.cornell.edu] has joined #pypy-sync
+[09:55] == dmlockha_ [~dmlockhar@nat-128-84-124-0-361.cit.cornell.edu] has quit [Read error: Connection reset by peer]
+[09:57] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has quit [Ping timeout: 264 seconds]
+[09:57] <fijal_> dmlockh__: there are too many of you
+[10:00] <dmlockh__> haha, sorry
+[10:00] == dmlockh__ has changed nick to dmlockhart
+[10:00] <fijal_> dmlockhart: managed to get others?
+[10:01] == fijal_ has changed nick to fijal
+[10:02] <dmlockhart> fijal: yes, Berkin is here
+[10:02] <fijal> and Christopher is coming?
+[10:02] <dmlockhart> Chris is running a bit late, he's on the bus now.
+[10:02] <dmlockhart> he'll be here soon
+[10:02] <fijal> I have time
+[10:03] <fijal> I think as a start you can explain to me precisely what you guys wanted in the proposal
+[10:11] <dmlockhart> okay Chris is here, we'll start now
+[10:12] <dmlockhart> one second, he's logging into IRC
+[10:13] == cbatten [80547feb@gateway/web/freenode/ip.128.84.127.235] has joined #pypy-sync
+[10:13] <cbatten> ok
+[10:13] <dmlockhart> ok
+[10:13] <cbatten> so let me start by thanking you for your feedback on the pydgin project
+[10:13] <fijal> pleasure :-)
+[10:13] <fijal> and nice to "meet you"
+[10:14] <cbatten> let me start by summarizing the high-level research idea Berkin is planning to explore
+[10:14] <fijal> cool
+[10:14] <cbatten> we us python a ton, and we are also hardware architects
+[10:14] <cbatten> python is slow
+[10:14] <fijal> cpython is slow, but ok :-)
+[10:14] <cbatten> we are really interested in hardware acceleration for not just python but generally dynamic programming languages
+[10:14] <cbatten> right!
+[10:15] <cbatten> so traditionally things like direct bytecode execution seemed like a good idea
+[10:15] <cbatten> but turned out to be the wrong approach because they basically mean you can't use a JIT
+[10:15] <fijal> right
+[10:15] <cbatten> so the key question is what is the right way to do hardware acceleration that complements
+[10:15] <cbatten> the jit instead of replaces the jit
+[10:15] <fijal> assume I know nothing about the hardware approaches btw
+[10:15] <cbatten> so that is something that we are really interested in
+[10:15] <cbatten> sure
+[10:16] <cbatten> so given that context one reason we are excited about pypy is that it is a meta tracing jit
+[10:16] <cbatten> so ideally our work in rpython can apply to not just python but any interpreter written in rpython
+[10:16] <cbatten> that is really amazing in my opinion
+[10:16] <cbatten> ok -- so the only issue is, I am not a "JIT person" :)
+[10:17] <cbatten> we are experts in hardware architecture but just learning about JITs in general and rpython/pypy specifically
+[10:17] <fijal> so the idea is a bit to explore what hardware can do for us?
+[10:17] <dmlockhart> right
+[10:17] <cbatten> right -- that is the big picture research idea
+[10:17] <cbatten> _but_
+[10:17] <cbatten> we think the GSoC might be a starting point
+[10:17] <fijal> ok
+[10:17] <cbatten> so for example we are using the ARM backend because it is easier for us to run on our simulators and easier for us to understand
+[10:17] <cbatten> we are more "RISC" guys than "CISC" guys
+[10:18] <cbatten> we are also really excited about long-term research collaborations too
+[10:18] <cbatten> I know you guys do both research and development
+[10:18] <fijal> so we're somewhere awkwardly in between
+[10:18] <cbatten> so the GSoC might be a great way for us to learn more about the back-end and Rpython. we have already taught ourselves a bunch, but there is still much to learn
+[10:19] <fijal> we do research, but also provide concrete implementation
+[10:19] <cbatten> how about "pleasantly" in between
+[10:19] <fijal> :-)
+[10:19] <cbatten> ok
+[10:19] <fijal> it's difficult to find money for in between
+[10:19] <fijal> ok, great
+[10:19] <cbatten> so our idea for the GSoC is that it can be a little bit of both
+[10:19] <cbatten> so we want a good aggressive baseline
+[10:19] <cbatten> so we want an optimized ARM backend
+[10:19] <cbatten> so part 1 of the project would be to work on improving the ARM backend
+[10:19] <cbatten> this helps us in many ways
+[10:20] <fijal> I think we can give you some feedback on what CPU support we might actually want, but that requires armins input (it's separate from GSoC though)
+[10:20] <cbatten> we learn more about the details of the backend
+[10:20] <cbatten> and we get some experience with learning about JIT techniques
+[10:20] <cbatten> pypy gets some optimziations in the arm backend
+[10:20] <cbatten> so that is part 1
+[10:21] <cbatten> part 2 would be to explore some kind of simple new instructions that could significantly improve the JIT performance
+[10:21] <cbatten> we would do part 1 on a real ARM platform
+[10:21] <fijal> we were wondering if we can get something in the proposal that can improve the x86 backend too
+[10:21] <fijal> e.g. a better register allocator
+[10:21] <cbatten> and part 2 would be on an ARM simulator that allows us to actually new instructions
+[10:21] <cbatten> uh ...
+[10:21] <cbatten> so we are really not "x86" guys :)
+[10:21] <fijal> heh :-)
+[10:21] <cbatten> is the register allocator common across both backends
+[10:21] <fijal> well I'm happy to do the x86 part
+[10:21] <dmlockhart> fijal:  can you explain a bit more about what you want?
+[10:21] <fijal> yes
+[10:22] <cbatten> ah -- well then I think what you are saying
+[10:22] <cbatten> is if we work on improving the register allocator for the arm backend
+[10:22] <fijal> so e.g. tight loops end up in a stupid situation that at the end of the loop you have a few spurious MOVs
+[10:22] <cbatten> it could also help the x86 backend
+[10:22] <cbatten> ?
+[10:22] <fijal> because the register allocator did not think that far ahead
+[10:22] <fijal> cbatten: yes!
+[10:22] <cbatten> how concrete does the proposal need to be?
+[10:22] <fijal> I gonna talk a bit in x86 since I don't know arm very well
+[10:22] <fijal> cbatten: not very concrete
+[10:23] <cbatten> ok
+[10:23] <fijal> cbatten: it's essentially up to us to decide whether the student did a good job or not
+[10:23] <fijal> regardless of the achieved objectives as specified in the proposal
+[10:23] <fijal> ideally they would not diverge too much, but it is up to us
+[10:23] <cbatten> ok -- sounds good, but we still want to be relatively specific so that we are clean on what you expect us to work on
+[10:24] <cbatten> so maybe we should have a short list of specific optimizations Berkin will explore?
+[10:24] <cbatten> one would be more efficient register allocation
+[10:24] <cbatten> is this something you know alot about and could give us guidance and ideas?
+[10:24] <fijal> I think it's unfortunately a bit boring "walking around and saying which constructs are inefficient"
+[10:25] <fijal> and there are some glaringly inefficient constructs, like reloading the same thing over and over again
+[10:25] <fijal> another thing that we don't do is instruction reorderin
+[10:25] <fijal> it makes a lot less sense on x86, since the CPU is out of order anyway
+[10:26] <cbatten> so before we go to far here
+[10:26] <cbatten> are you okay with us working purely on the arm backend. some of what we do might help x86 but we would do all of our testing and analysis on the ARM backend
+[10:26] <cbatten> i think that is kind of important for us
+[10:26] <fijal> that's likely fine
+[10:27] <cbatten> ok
+[10:27] <cbatten> good
+[10:27] <cbatten> so re: instruction reordering
+[10:27] <cbatten> right now it seems like there is a one-to-one mapping from JIT IR nodes to arm instruction sequences
+[10:27] <cbatten> correct?
+[10:27] <fijal> it's usually one-to-many
+[10:27] <cbatten> right one-to-many
+[10:27] <fijal> usually one IR generates more than one instruction
+[10:28] <fijal> but yes, there is little to none thinking about cross-IR stuff
+[10:28] <cbatten> so instruction reordering would be _across_ IR nodes
+[10:28] <cbatten> ah
+[10:28] <cbatten> i think we would be interested in exploring that
+[10:28] <fijal> I was thinking maybe we can lower IR a bit for the backend
+[10:28] <fijal> and do some things in "rewrite" step
+[10:28] <fijal> which essentially lowers the level of IR
+[10:28] <cbatten> right -- so the high-level idea would be to explore cross-IR optimization in the back-ened
+[10:28] <fijal> right now it does things like changes malloc to a direct call to the GC
+[10:29] <fijal> (or more precisely some checks and some pointer ops)
+[10:29] <fijal> but maybe we need to lower other things too
+[10:29] <fijal> like we have a lot of memory operations
+[10:29] <fijal> maybe we can use just one and pass the size as an argument
+[10:29] <fijal> and then some things would be easier to do on IR
+[10:29] <fijal> like loading a segment
+[10:30] <dmlockhart> so you are saying lower the IR even further, and hopefully that would make it easier to do this kind of reordering analysis you are talking about
+[10:31] <fijal> yes
+[10:31] <fijal> reordering is just an example
+[10:31] <cbatten> ok
+[10:32] <cbatten> so I like the idea of focusing on lower-level optimizations like instruction reodering in the arm backend
+[10:32] <cbatten> is this connected to register allocation?
+[10:32] <cbatten> or is register allocation much higher-level in the analysis passes
+[10:32] <fijal> register allocation is done in the backend
+[10:32] <cbatten> so is the idea to reduce register pressure by instruction reodering
+[10:32] <fijal> but the code is shared
+[10:33] <cbatten> so this sounds good
+[10:33] <cbatten> so maybe we can chat about what would be the very first thing Berkin could work on
+[10:33] <cbatten> something very simple
+[10:33] <cbatten> just to get started
+[10:33] <fijal> give me a second
+[10:33] <cbatten> not a huge project, but just a small step
+[10:33] <fijal> I'll use x86 have only this machine right now sorry :-)
+[10:35] <fijal> http://paste.pound-python.org/show/3w1r7hTYAuofZ3Gjc55Q/
+[10:35] <dmlockhart> is there a specific version of ARM we are targeting? v6, v7, v8?
+[10:35] <fijal> this is an example
+[10:35] <fijal> we have v6 + v7 support
+[10:35] <fijal> I don't think we support v8
+[10:36] <berkin> so i was actually v6 backend had some inefficiencies i was trying to address
+[10:36] <dmlockhart> can you walk us through this example?
+[10:36] <fijal> berkin: yes, tons :)
+[10:36] <fijal> so at the end here for example we have a few movs
+[10:36] <berkin> one issue was loading immediate values
+[10:36] <fijal> that just reorder things for no good reasons
+[10:37] <fijal> also an example (that I'm not sure is correct, but we never thought about it) is - does add clear overflow flag?
+[10:37] <fijal> do we have to check for it so many times or can we check ones?
+[10:37] <berkin> add in arm?
+[10:38] <fijal> for example
+[10:38] <cbatten> back to your example
+[10:38] <fijal> cbatten: yes?
+[10:38] <cbatten> Berkin understands this more than I do, so bare with me
+[10:38] <cbatten> which are the movs that you think are unnecessary
+[10:39] <fijal> the first two at the top are definitely not necessary
+[10:39] <fijal> it's just that noone keeps enough state to say "those things are likely to be in registers"
+[10:39] <fijal> (line 2. and 3.)
+[10:39] <fijal> and there are a few at the end
+[10:39] <fijal> 71. 72. 73.
+[10:40] <fijal> maybe 71. and 72. are necessary but why not use registers? we don't have enough presssure here
+[10:40] <cbatten> I see
+[10:40] <cbatten> so at the bottom of the loop
+[10:40] <cbatten> we store to memory
+[10:40] <fijal> 73. is definitely not necessary
+[10:40] <cbatten> and at the top of the loop we load those same values back from memory?
+[10:40] <fijal> this likely hurts less in x86 because there is some internal register renaming anyway
+[10:40] <fijal> from the stack
+[10:40] <fijal> or "stack"
+[10:40] <fijal> the place where we spill things to
+[10:40] <fijal> (which happens to be GC managed but that's irrelevant)
+[10:41] <cbatten> interesting
+[10:41] <fijal> I think right now when we enter the loop the registers are allocated in first come first served basis
+[10:41] <fijal> cbatten: I can explain to you later, it's an interesting concept, but irrelevant now :-)
+[10:41] <cbatten> so this is an example of the kind of backend optimziation we could work on
+[10:41] <fijal> first come - first served does not take into the account what's actually used
+[10:41] <fijal> yes
+[10:42] <fijal> I'm happy to do the necessary adjusting for x86
+[10:42] <cbatten> good
+[10:43] <fijal> which will hopefully be few
+[10:43] <fijal> cbatten: our register allocator is "old"
+[10:43] <fijal> as in we did not change it since we wrote the backend at all
+[10:43] <fijal> so we went from no register allocator to what we have now
+[10:44] <fijal> and we had bigger problems back then
+[10:44] <cbatten> ok
+[10:44] <fijal> cbatten: another example is that we don't look forward
+[10:44] <fijal> as in for example if you load a thing to register and have an output in another register
+[10:44] <fijal> you don't take into an account that the next operation might be a call that wants a specific register for a first argument
+[10:45] <cbatten> ok -- so this is an example of another cross-IR node optimization
+[10:45] <cbatten> so I think the high-level idea for the proposal
+[10:45] <cbatten> would be to explore cross-IR node optimization in the ARM backend
+[10:46] <fijal> I think the ARM backend has some low-hanging fruit that can be done before (e.g. loading IMMs)
+[10:46] <cbatten> maybe we start (just to get going and learn pypy's devel process, code review, comit approach)
+[10:46] <cbatten> maybe we start with a simple intra-IR node optimization
+[10:46] <fijal> but also I think some of the cross-IR can be done by lowering the IR first
+[10:46] <cbatten> but the goal would be to explore corss-IR otimization
+[10:46] <cbatten> rogjt
+[10:46] <fijal> cool
+[10:46] <cbatten> right
+[10:46] <berkin> i've been working on improving load immediates
+[10:46] <cbatten> so maybe a key part of doing the cross-IR optimization is lower the IR first a bit
+[10:46] <berkin> it could be a way to get started with contributing code back
+[10:46] <fijal> we usually work on feature branches in the main repo
+[10:46] <fijal> that get merged
+[10:46] <berkin> ah i see
+[10:47] <cbatten> right -- so I really like the idea of Berkin doing something very small
+[10:47] <fijal> yes
+[10:47] <cbatten> very small at first
+[10:47] <cbatten> so that we can learn the development process
+[10:47] <fijal> berkin: stay for a bit after the meeting I'll get you an account
+[10:47] <cbatten> so key question
+[10:47] <berkin> fijal: sounds good
+[10:47] <cbatten> if we are working on optimizing the performance of the ARM backened
+[10:47] <cbatten> how does pypy evaluate teh performance
+[10:47] <cbatten> is there a standard platform?
+[10:48] <cbatten> is there some kind of CI server that does performance regressions
+[10:48] <fijal> for x86 we run nightly a set of benchmarks
+[10:48] <berkin> we just got three different arm boards to test things on :)
+[10:48] <fijal> for ARM we don't run it, mostly because running of the entire set is prohibitevly expensive
+[10:48] <fijal> if we can get hands on a fast ARM machine, we can definitely run it nightly
+[10:48] <fijal> it's reported on speed.pypy.org
+[10:48] <cbatten> ok -- so for the ARM backend we would maybe do our own analysis on our embedded boards
+[10:49] <fijal> I would love to get speed.pypy.org running on ARM btw
+[10:49] <fijal> even if for a subset of benchmarks
+[10:49] <cbatten> so when we commit code we would maybe report performance improvement somehow?
+[10:49] <fijal> that's a start
+[10:49] <fijal> but a CI would be better
+[10:49] <fijal> https://bitbucket.org/pypy/benchmarks
+[10:49] <fijal> this is our suite
+[10:50] <cbatten> so we should target those benchmarks as the primary way to evaluate our backend optimization
+[10:50] <cbatten> we are already using that suite actually to explore some of our very preliminary hardware ideas
+[10:51] <fijal> cool :)
+[10:52] <cbatten> ok -- so I think we have enough to start sketching out a proposal
+[10:52] <fijal> mhm
+[10:52] <cbatten> Berkin will work on a draft and send it to you by end of the weekend
+[10:52] <fijal> awesome
+[10:53] <fijal> cbatten: if you want I can give you a few sentences what we think would help us in hardware too :-)
+[10:53] <cbatten> sounds good
+[10:53] <cbatten> lots to think about, and I am hopeful this will be the start of a fun and engaging collaboration!
+[10:53] <fijal> "likely/unlikely" jump is one of those
+[10:53] <fijal> and efficient write barriers is another one
+[10:53] <cbatten> definitely
+[10:54] <cbatten> if you want to send us a paragraph with some ideas on what the hardware could do to make the JIT way faster that wuold be really useful
+[10:54] <cbatten> so fine grain write barriers?
+[10:54] <fijal> cbatten: cool, will talk with Armin about it and try to send it to you this week
+[10:54] <cbatten> ok
+[10:54] <cbatten> sounds good
+[10:54] <fijal> essentially some way to specify it
+[10:54] <fijal> I'll think about it, I don't have anything very precise
+[10:54] <cbatten> sounds good
+[10:54] <cbatten> ok -- we will touch base soon
+[10:54] <cbatten> bye!
+[10:54] <fijal> bye!
+[10:55] <dmlockhart> good meeting :)
+[10:55] == cbatten [80547feb@gateway/web/freenode/ip.128.84.127.235] has quit [Quit: Page closed]
+[10:55] <fijal> berkin: what's your username on bitbucket?
+[10:55] <berkin> hmm i'll check, i don't use bitbucket much :)
+[10:55] <berkin> i'll create one if i don't have one
+[10:56] <fijal> dmlockhart: you do have access right?
+[10:56] <dmlockhart> fijal: I do not have access, but I'm not sure how much development I'll be doing
+[10:56] <dmlockhart> this is Berkins thing :)
+[10:56] <fijal> ok
+[10:59] == arigato [~arigo@2a02:120b:c3d6:4bc0:31c5:bfe4:1b:17e4] has joined #pypy-sync
+[11:00] <fijal> arigato: hi
+[11:00] <fijal> arigato: you just missed the meeting
+[11:00] <berkin> fijal: i created a new bitbucket account
+[11:00] <berkin> user name is berkinilbeyi
+[11:00] <fijal> berkin: added
+[11:01] <fijal> arigato: do you want logs?
+[11:03] <arigato> sorry about that

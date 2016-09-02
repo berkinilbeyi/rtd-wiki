@@ -1,0 +1,18 @@
+                sz1   sz2   sz3
+LQ entries      10    16    32
+SQ entries      10    16    32
+Num PR          85    128   256
+IQ entries      21    32    64
+ROB entries     64    96    192
+LFST size       341   512   1024
+SSIT size       341   512   1024
+
+
+LQ   = load queue
+SQ   = store queue
+PR   = physical registers
+IQ   = instruction queue
+ROB  = reorder buffer
+LFST = last fetched store table
+SSIT = sotre set id table
+

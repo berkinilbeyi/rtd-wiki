@@ -1,0 +1,26 @@
+Instruction-set simulators (ISSs) are indispensable tools for software
+development on new ISAs.  Proprietary ISAs have very stable interfaces
+that evolve slowly, and as a result frequent changes to the ISSs were not
+required. Recently, RISC-V recognized the increasing need for
+instruction-set specialization by providing a very extensible ISA.
+Extensible ISAs require the ISS to be extensible as well. An extensible
+ISS should enable productively experimenting with new instructions while
+maintaining high simulator performance.  We believe Pydgin [1] is the
+right tool for this job with its excellent productivity and performance,
+made possible by its pseudo-code-like architecture description and the
+automatic insertion of a state-of-the-art just-in-time compiler. In this
+talk, I will introduce Pydgin and its unique development flow, which makes
+use of contemporary work on dynamic language interpreters. I will also
+talk about our development effort to add RISC-V support to Pydgin, which
+we achieved in only 2 person-weeks, giving a 3X performance boost over
+Spike, the reference RISC-V ISS. I will argue that Pydgin is an excellent
+framework for experimenting with new RISC-V extensions, as well as adding
+instrumentation for early design-space exploration.
+
+Note that I would prefer a 12-minute presentation slot for this. But if
+there are no slots left, I would be happy to do a poster instead.
+
+[1] D. Lockhart, B. Ilbeyi, and C. Batten. Pydgin: Generating Fast
+Instruction Set Simulators from Simple Architecture Descriptions with
+Meta-Tracing JIT Compilers. Int'l Symp. on Performance Analysis of Systems
+and Software (ISPASS), Mar 2015.

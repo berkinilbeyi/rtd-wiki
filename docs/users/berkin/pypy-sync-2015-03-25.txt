@@ -1,0 +1,182 @@
+[09:32] == berkin [8054e0f3@gateway/web/freenode/ip.128.84.224.243] has joined #pypy-sync
+[09:32] -ChanServ- [#pypy] Welcome!
+[09:53] <fijal> berkin: ping
+[09:53] <berkin> fijal: hey
+[09:53] <fijal> berkin: reading your proposal
+[09:53] <fijal> LICM is definitely out of scope
+[09:53] <fijal> (and is done at a different level anyway)
+[09:53] <berkin> ah i see
+[09:54] <berkin> does the jit currently do these optimizations?
+[09:54] <fijal> what hardware techniques do you want to do?
+[09:54] <fijal> yes
+[09:55] <berkin> hmm, sometimes we see loop-invariant code in the loops
+[09:55] <berkin> maybe it's because of corner cases where jit cannot prove it's loop invariant?
+[09:56] <fijal> example?
+[09:56] <fijal> it definitely gets lost every now and then
+[09:56] <berkin> let me try to find an example
+[09:56] <fijal> I would personally like to strip the whole expolarion of hardware from the proposal
+[09:57] <fijal> "just" improving the backend is IMO good enough for a soc
+[09:57] <berkin> i see
+[09:57] <berkin> makes sense
+[09:59] <fijal> "report the nightly results
+[09:59] <fijal> similar to speed.pypy.org."
+[09:59] <fijal> we can really just report it to speed
+[10:00] <berkin> we might not be able to run the entire suite
+[10:00] <fijal> berkin: are sure jumping over immediate is costly?
+[10:01] <berkin> i tried this optimization with a smaller interpreter (not full pypy yet) on raspberry pi, and i was seeing around 10% performance improvement
+[10:01] <fijal> that's fine
+[10:01] <fijal> ok cool
+[10:01] <fijal> I think there is more of such to be done
+[10:01] == gregor_w [~textual@84-72-179-30.dclient.hispeed.ch] has joined #pypy-sync
+[10:01] <fijal> e.g. instruction reordering
+[10:02] <fijal> improvements to the register allocator
+[10:02] <fijal> more cross IR optimizations
+[10:02] <fijal> it can quite easily stretch 3 months on it's own
+[10:02] <berkin> yes, it spills registers a lot
+[10:03] <fijal> so I would remove the part about LICM and the part about hardware stuff
+[10:03] <berkin> fijal: any concrete thing to include regarding "improving register allocator"?
+[10:03] <fijal> we can do hardware stuff later past soc
+[10:03] <fijal> "spill less"
+[10:03] <fijal> I think :-)
+[10:04] <berkin> that's more to do with instruction ordering though?
+[10:04] <fijal> both
+[10:04] <fijal> that is you can reduce the pressure by reordering
+[10:04] <fijal> but you cna also just improve the current algorithm
+[10:04] <berkin> hmm i see
+[10:04] <fijal> (take more things into the account like the fact that r1 goes to first argument for example)
+[10:05] <berkin> ok i'll strip away the hardware stuff, and just talk about the backend improvements
+[10:05] <fijal> yeah
+[10:05] <fijal> and the LICM too
+[10:05] <berkin> and take LICM out
+[10:06] <fijal> show me when the LICM fails though :)
+[10:07] <berkin> http://paste.pound-python.org/show/QPcQBGS0lIK1uAhnZGQo/
+[10:07] <berkin> line 14 and 22 could be put at the header of the loop
+[10:08] <berkin> i think? there might be a reason why the optimizer is missing though
+[10:08] <berkin> this is a vector-vector addition by the way
+[10:09] <berkin> for i in xrange( len( dest ) ):  dest[i] = src0[i] + src1[i]
+[10:10] <fijal> indeed
+[10:10] <fijal> this is rpython or python code?
+[10:10] <fijal> python
+[10:10] <berkin> python
+[10:10] <berkin> running on pypy
+[10:10] <fijal> the LICM code is scary
+[10:10] <fijal> I would be more than happy to let someone rewrite it
+[10:10] <berkin> where is that?
+[10:11] <berkin> i might want to poke around, even though it's out of scope of soc :)
+[10:11] <fijal> rpyhton/jit/metainterp/optimizeopt/unroll.py
+[10:11] <fijal> also virtualstate.py in the same dir
+[10:11] <fijal> (and a bunch of code spread around)
+[10:11] <fijal> I've started doing a refactoring that imrpoves the representation of IR
+[10:11] <fijal> to save space and time
+[10:12] <berkin> does that mean the ir will change?
+[10:13] <fijal> no, not the IR
+[10:13] <fijal> the way it's represented internally only
+[10:13] == arigato [~arigo@65.100.61.188.dynamic.wline.res.cust.swisscom.ch] has joined #pypy-sync
+[10:13] <berkin> ah i see
+[10:14] <berkin> our challenge with the hardware acceleration ideas right now seems to be that it is possible to address some of the jit inefficiencies in software
+[10:15] <fijal> heh
+[10:15] <fijal> well
+[10:16] <fijal> shall we chat about things that can't be fixed in software then?
+[10:16] <berkin> so it's difficult to say "these ir nodes can be accelerated/eliminated using hw techniques" vs "the jit could have eliminated these nodes"
+[10:16] <fijal> ah
+[10:16] <berkin> yes, that would be helpful
+[10:17] <fijal> here I'm just talking about the representation while tracing/optimizing
+[10:17] <fijal> which has nothing to do with the hardware
+[10:18] <berkin> yes i know, i was talking in general
+[10:19] <fijal> so say, guards
+[10:19] <fijal> "unlikely jump" would be awesome
+[10:19] <fijal> or an efficient write barrier
+[10:19] <fijal> and arigato probably has ideas about STM
+[10:19] <fijal> write barrier logic looks like this
+[10:19] <berkin> so why would you need an efficient write barrier?
+[10:20] <berkin> for jit'ing?
+[10:20] <fijal> because we call it all the time
+[10:20] <fijal> all GC-object writes have write barrier
+[10:20] <berkin> why do GC-object writes require a barrier?
+[10:21] <fijal> see in _write_barrier_fastpath in opassembler.py for the arm backend
+[10:21] <arigato> berkin: google "write barrier garbage collection"
+[10:21] <fijal> it's required to have the remembered set pointing to young generation
+[10:23] <berkin> hmm interesting
+[10:23] <berkin> i'll read the paper on it
+[10:25] <fijal> berkin: it's a bit advanced, but maybe we can come up with something
+[10:25] <fijal> like how hardware can help us
+[10:25] <fijal> null checks combined with reads would be helpful too I would expect
+[10:25] <fijal> like guard_class -> check if it' not null and check it's typeptr later
+[10:26] <berkin> yeah, there is a lot of work on hardware techniques to improve garbage collection
+[10:26] <berkin> i need to read more about these techniques and if any can apply to pypy
+[10:26] <berkin> fijal: yes, that seems like an obvious one
+[10:26] <fijal> so I think compared to most of what is done
+[10:27] <fijal> we want something more minimal
+[10:27] <fijal> something that lets us do more work
+[10:27] <fijal> the usual hardware approach seems to be heavy handed (e.g. HTM)_
+[10:27] <berkin> hmm i see
+[10:28] <fijal> arigato: chris (berkins advisor) asked if we can write a mail describing hardware techniques that would help us
+[10:28] <berkin> do you know how much of the execution time/memory overhead goes into GC in pypy?
+[10:28] <berkin> i don't think that's reported in pypylogs
+[10:28] <fijal> it's reported in a different pypylog
+[10:28] <fijal> PYPYLOG=log
+[10:29] <fijal> and then there is an analyzer in rpython/tool/logparser.py I think
+[10:29] <fijal> will show you
+[10:29] <fijal> usually not thjat much
+[10:30] <fijal> but it does not show everything, e.g. it does not show the time spent in write barrier
+[10:30] <berkin> ah
+[10:32] <fijal> arigato: can we get hardware support for shadowstack?
+[10:32] <berkin> which function should i call in logparser.py to get the gc statistics?
+[10:32] <fijal> berkin: call the program
+[10:32] <fijal> logparser.py log
+[10:35] <berkin> fijal: ah this is cool
+[10:36] <berkin> is normal-execution running on the interpreter without jit?
+[10:36] <fijal> both
+[10:38] <arigato> honestly, unclear that anything specific would really help
+[10:55] <cfbolz> heh, it kind of seems like the hardware people don't really know what VMs are doing, and software people don't know what things would be helpful in hardware
+[10:56] <arigato> indeed, my knowledge of that is mostly limited to "HTM makes no sense for pypy-stm"
+[10:58] <arigato> fijal: to answer your shadowstack question: no, it's a question of compiler cleverness, not hardware (in theory the new llvm "statepoints" could help, if they are not buggy at all)
+[10:59] <arigato> write barrier hardware support: also unclear, it's just an extra couple of operations to check some flag that is located in the header of the object being accessed
+[11:00] <arigato> guards: also very unclear that you can optimize these conditional jumps
+[11:01] <arigato> a conditional-jump-forward is already optimized by assumed it is not followed, unless recent experience with that same branch indicates otherwise
+[11:01] <fijal> no, you can't optimize them away
+[11:01] <fijal> but telling hardware which one is more lilely sounds useful?
+[11:02] <arigato> actually we might play simply with changing the order of instructions
+[11:02] <fijal> that does not work on x86
+[11:02] <fijal> (documented)
+[11:02] <arigato> instead of a conditional jump over a small block of code,
+[11:02] <arigato> which is usually taken,
+[11:02] <arigato> we could write a conditional jump somewhere else if we need to enter the slow path
+[11:03] <arigato> assuming you mean "the x86 does not distinguish between forward and backward branches", I think it does -- or if it doesn't then it really doesn't matter
+[11:08] <berkin> branch predictors on x86 should be pretty good in figuring out the likely fail and likely pass guards (branches)
+[11:09] <berkin> but one idea we have is add some hardware to "watch" certain memory addresses
+[11:09] * dmlockhart reads through trying to catch up
+[11:10] <berkin> that are used for guards
+[11:10] <arigato> that's unlikely to help: we already have guard_not_invalidated for that case
+[11:11] <berkin> so that if the memory system can guarantee that the memory values that the guards guard for don't change then we can skip guards all together
+[11:11] <arigato> yes, we already implemented that in pure software, by explicitly invalidating the machine code at the place that contains the write
+[11:12] <arigato> (for expected-slowly-modified code, the overhead of checking if we need to invalidate machine code is negligible)
+[11:12] <berkin> arigato: hmm, interesting, how does guard_not_invalidated work?
+[11:13] <arigato> I think it works like you're describing :-)
+[11:13] <dmlockhart> arigato: hardware can always help :) (almost always...)
+[11:14] <dmlockhart> I think a good place to look for "hardware helping software" is the stuff Oracle is doing
+[11:14] <dmlockhart> they are specializing their server processors and adding special instructions for the Java VM
+[11:14] <arigato> berkin: guard_not_invalidated turns into zero instructions, but record a backward reference from the object field's value to the assembler, in case it needs to be invalidated later
+[11:15] <dmlockhart> ARM I suspect did a crappy job because like you said, they were hardware but didnt have enough software expertise
+[11:15] <dmlockhart> oracle is vertically integrated across the whole stack now
+[11:15] <dmlockhart> they are doing a lot of work on optimizing VMs, in addition to adding hardware support
+[11:16] <arigato> dmlockhart: any more precise reference?
+[11:17] <dmlockhart> arigato: let me look; I heard the information about the processor optimizations at a talk
+[11:18] <dmlockhart> I also think fijal has some interesting insight about branch hints; it seems like it could be really challenging to order branches/code in a way to get good performance if you see here: http://igoro.com/archive/fast-and-slow-if-statements-branch-prediction-in-modern-processors/
+[11:19] <dmlockhart> also anything interacting with memory seems like it could be a big win
+[11:20] <dmlockhart> do you guys have many problems with register pressure?
+[11:21] <arigato> dmlockhart: I think fijal is talking about the vast majority of branches generated by the JIT, which have a single very-probable outcome
+[11:21] <arigato> register pressure seems not to be a big problem
+[11:25] <dmlockhart> I'm having trouble finding specifics, they may not be publishing, grr
+[11:25] <dmlockhart> http://www.mythics.com/about/blog/an-introduction-to-your-servers-next-cpu-the-sparc-m7
+[11:27] <dmlockhart> I think if nothing else, it would be useful to have an evaluation of how JITs interact with hardware
+[11:27] <dmlockhart> do they cause problems for branch predictors?
+[11:27] <dmlockhart> what about memory access performance/patterns?
+[11:28] <dmlockhart> there seems to be a lot we dont know, and I haven't found much literature on
+[11:28] <dmlockhart> and its hard to propose improvements until we identify the problem
+[11:28] <dmlockhart> s/the problem/if there are current limitations
+[11:30] <dmlockhart> okay, I found some slides from HotChips for the Oracle M7: http://www.setphaserstostun.org/hc26/HC26-12-day2-epub/HC26.12-8-Big-Iron-Servers-epub/HC26.12.820-Next_Gen_SPARC_Phillips-Oracle-FinalPub.pdf
+[11:31] <dmlockhart> slide 15 has an interesting example
+[11:36] <cfbolz> dmlockhart: re memory access patterns: there is a lot of pointer chasing, of course
+[11:40] <arigato> the slide page 15 is indeed interesting, although it opens questions like "but then you're limiting the address space to 32-, 40-, 48-bits; it's a trade-off against future extension"
+[11:41] <arigato> but well, I suppose it's fine for now to embed 8 or 16 bits into every pointer

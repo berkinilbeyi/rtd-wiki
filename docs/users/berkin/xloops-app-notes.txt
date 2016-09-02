@@ -1,0 +1,145 @@
+
+
+rgb2cmyk    uc      UC( uc )
+sgemm       uc      UC( uc( or ) )
+strsearch   uc      UC( de ), UC( uc )
+symm        uc      om( UC( or ) )
+viterbi     uc      UC( uc ), om( UC )
+war         uc      om( UC( uc ) )
+adpcm       or      OR
+covar       or      UC( or ), UC( uc ), uc( uc( OR ) )
+dither      or      om( OR )
+kmeans      or      UC, UC, OR( or( or ) ), OM( uc ), UC( uc )  
+sha         or      db( UC, de( UC, UC, om, OR, OR, OR, OR, OR ), UC )
+symm        or      om( uc( OR ) )
+dynprog     om      om( OM( or ) )
+knn         om      uc( UC, ?recurse( OM( db ), UC, ?recurse)
+knapsack    om      om( OM )
+warshall    om      om( OM( uc ) )
+mm          orm     ORM
+stencil     orm     om( ORM )
+btree       ua      UC, UA
+heapsort    ua      UA( db ), OM( db )
+huffman     ua      UC, UA, UC, UC, UA, db, or
+rsort       ua      om( uc, UA, OR, OM )
+bfs         uc.db   UC.DB( uc? )
+quicksort   uc.db   UC.DB( om )
+
+can modify: war, rgb2cmyk, sgemm, kemans, dynprog, warshall
+
+symm-or               tloops-reg        works (good one)
+viterbi (one loop)                
+adpcm
+covar (one loop)                        works
+dither
+sha                                     works
+knapsack                                works
+mm                                      works
+stencil                                 works
+btree (one loop)                        works
+rsort                                   works
+
+
+
+
+
+control flow:
+rgb2cmyk: inner doesn't have control flow divergence (dfg 1)
+sgemm: triple-nested loop
+strsearch: complicated
+symm: dfg 1 is the inner loop of tagged UC, dfg 3 is the inner OR loop, no
+      control flow
+viterbi: neither of the loops don't have any control flow
+war: cfg 0 is doubly nested UC( uc ), cfg 1 is double nested OM( uc )
+adpcm: complicated
+covar: dfg 1, 4 inner loops of UC, dfg 6 is OR w/o control flow
+dither: cfg 2, 3 (opt) are ORs. These have control flow in them though
+kmeans: analysis didn't work...
+sha: good one
+dynprog: OM with OR loop inside (dfg 1)
+knn: analysis didn't work...
+knapsack: complicated
+mm: analysis didn't work...
+stencil: no cfg. this might be interesting, has bunch of fu ops, need to
+         be careful with mem dep
+bintree: has an inner loop
+heapsort: skip
+huffman: dfg 0 OM w/o control flow, others are complicated
+rsort: dfg 0,1,2,3 OMs w/o control flow, the rest are complicated
+bfs: skip
+quicksort: complicated
+
+
+sha 0-4:
+  io    1way  2way  4way  inf   inf-nc
+0 140   101   52    42    42    42
+1 500   460   231   122   121   121
+2 460   420   211   121   121   121
+3 500   460   231   122   122   122
+4 440   400   200   141   140   140
+s 2040  1841  925   548   546   546
+a 1.0   1.11  2.21  3.72  3.74  3.74
+
+sha-opt 5-9:
+5 140   101   52    42    42    42
+6 480   440   220   112   82    82
+7 460   420   210   107   74    74
+8 520   480   240   122   83    83
+9 460   420   210   107   74    74
+s 2060  1861  932   490   355   355
+a 1.0   1.11  2.21  4.20  5.80  5.80
+
+rgb2cmk
+1 660   381   194   145   145   50
+
+viterbi
+0 660   582   293   149   52    51
+1 880   480   246   205   205   51
+
+stencil-orm (might be broken due to mem deps):
+0 1740  1139  1139  1139  1139  1139
+1 1740  1139  1139  1139  1139  1139
+
+rlispy (sum):
+  220   141   72    42    42    41
+
+
+inputs_tloops = { \
+  #'bfs'                   : ('bfs',              'tloops'),
+  # using unified worklist version of bfs
+  'bfs'                   : ('bfs',              'tloops-unified'),
+  'bfs-split'             : ('bfs',              'tloops'),
+  'kmeans'                : ('kmeans',           'tloops'),
+  'kmeans-opt'            : ('kmeans',           'tloops-opt'),
+  'rgb2cmyk'              : ('rgb2cmyk',         'tloops'),
+  'rsort'                 : ('rsort',            'tloops'),
+  'rsort-opt'             : ('rsort',            'tloops-opt'),
+  'sgemm'                 : ('sgemm',            'tloops'),
+  'strsearch'             : ('strsearch',        'tloops'),
+  'symm-u'                : ('symm',             'tloops'),
+  'symm-r'                : ('symm',             'tloops-reg'),
+  'warshall-u'            : ('warshall',         'tloops'),
+  'warshall-m'            : ('warshall',         'tloops-mem'),
+  'viterbi'               : ('viterbi',          'tloops'),
+  'mibench-adpcmdec'      : ('mibench-adpcmdec', 'tloops'),
+  'mibench-adpcmdec-opt'  : ('mibench-adpcmdec', 'tloops-opt'),
+  'dither-u'              : ('dither',           'tloops'),
+  'dither-r'              : ('dither',           'tloops-reg'),
+  'dither-r-opt'          : ('dither',           'tloops-reg-opt'),
+  #'dither-m'              : ('dither',           'tloops-mem'),
+  'sha'                   : ('sha',              'tloops'),
+  'sha-opt'               : ('sha',              'tloops-opt'),
+  'stencil'               : ('stencil',          'tloops'),
+  'bintree'               : ('bintree',          'tloops'),
+  'heapsort'              : ('heapsort',         'tloops'),
+  'huffman'               : ('huffman',          'tloops'),
+  'knapsack-small'        : ('knapsack',         'tloops --weights small'),
+  'knapsack-large'        : ('knapsack',         'tloops --weights large'),
+  'dynprog'               : ('dynprog',          'tloops'),
+  'covariance'            : ('covariance',       'tloops'),
+  'pbbs-mm'               : ('pbbs-mm',          'tloops --input-file ' + \
+         '{}../pbbs-mm/pbbs-mm-2dgrid-e-1000.dat'.format( opts.test_dir ) ),
+  'pbbs-knn'               : ('pbbs-knn',         'tloops --input-file ' + \
+         '{}../pbbs-knn/pbbs-knn-2dincube-500-in.dat'.format( opts.test_dir ) ),
+  'quicksort-split'       : ('quicksort',        'tloops-split'),
+  'quicksort-unified'     : ('quicksort',        'tloops-unified'),

@@ -1,0 +1,49 @@
+
+
+Many reviewers commented on the baseline being the in-order processor,
+which is not adequate. However, we evaluate the LPSU coupled with three
+different GPP microarchitectures, in-order, 2-way out-of-order, and 4-way
+out-of-order. For each LPSU+GPP configuration, the baseline is the
+respective GPP-only microarchitecture. Figure 5 contributes to the
+confusion because it is normalized to io. However, the normalization (io)
+and the first two bars there (ooo/2 and ooo/4) are meant to be all
+baseline configurations. Furthermore, we refer to Table 2 for relative
+performance trends for different configurations.
+
+[ReviewerB/E] Choice of benchmarks: We have drawn our benchmarks from a
+variety of benchmark suites to provide diversity. We picked medium-sized
+benchmarks to study the programs in detail. We picked benchmarks targeting
+different domains such as graphics, scientific computing, communications,
+encryption, and compression, which had different inter-iteration loop
+patterns to illustrate all of our proposed mechanisms. Future work is to
+study larger benchmark suites such as SPEC to extract the loop patterns
+automatically with the help of a compiler analysis.
+
+[ReviewerA/B/E] Related work: Our approach is significantly different than
+loop stream buffers, which is a pre-fetching technique to bring in data
+used in loops early, but not exploiting any parallelism. Our work has some
+similarity to HELIX-RC, which we couldn't cite because it was not
+published when we submitted this paper. HELIX-RC is mostly complementary
+to our work since it's mostly a compiler technique to extract parallelism.
+In addition our work targets finer-grain loops and dependencies with lower
+overheads, and strives to provide a clear ISA abstraction without
+suffering from code bloat and performance degradation in traditional
+execution, enabling things like adaptive execution.
+
+[ReviewerB/C] OoO performance: Compared to 4-way OoO, specialized
+execution on the LPSU achieves comparable performance, sometimes achieving
+better performance, other times worse. LPSU can occasionally get better
+performance due to its ability to exploit loop-level parallelism as
+opposed to OoO can only exploit ILP. One big goal of specialized execution
+is to achieve better energy efficiency, which it does even when the
+performance is not as good. If performance is higher priority than energy
+efficiency, we propose adaptive execution, which achieves the best
+performance of either traditional or specialized execution.
+
+
+[ReviewerE] Studying multiple microarchitectures: This is a good
+suggestion to highlight the power of ISA abstractions. This paper presents
+the first possible microarchitecture to exploit these abstractions,
+and it is possible and interesting to study other proposed
+microarchitectures using these ISA abstractions, such as DySER, CCA etc as
+a follow-up work.

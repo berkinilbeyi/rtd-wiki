@@ -1,0 +1,639 @@
+[11:43] == berkin_ [80547ede@gateway/web/freenode/ip.128.84.126.222] has joined #pypy-sync
+[11:43] <fijal> dmlockhart: hi
+[11:43] <dmlockhart> fijal: hello
+[11:43] <fijal> dmlockhart: os I tried to run benchmarks
+[11:43] <fijal> and it froze my machine
+[11:44] <dmlockhart> hmm, we compiled using a custom cross compiler toolchain on CentOS
+[11:44] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com]
+[11:44] ==  realname : dmlockhart
+[11:44] ==  channels : #pypy-sync
+[11:44] ==  server   : wilhelm.freenode.net [NL]
+[11:44] ==  account  : dmlockhart
+[11:44] == End of WHOIS
+[11:44] <dmlockhart> berkin_: can tell you more about the cross compiler
+[11:45] <dmlockhart> fijal: you didn't try to execute the binaries directly right? just on the pydgin arm interpreter?
+[11:49] <berkin_> fijal: hi
+[11:49] <berkin_> fijal: did both of the benchmarks freeze your machine?
+[11:49] <cfbolz> dmlockhart, berkin_: I just made the first pull request
+[11:51] <berkin_> cfbolz: i have been experimenting with virtualizables as well, but for certain benchmarks the interpreter crashes with an rpython error message "Fatal RPython error: AssertionError"
+[11:51] <berkin_> cfbolz: in "rpython_jit_metainterp_optimizeopt_optimizer.c", line 14089, in Optimizer_make_equal_to
+[11:51] <cfbolz> berkin_: yes, unfortunately I can't run all things, since I don't have the cross compiler installed
+[11:51] <berkin_> cfbolz: i'll try your changes and can push what i tried to a branch
+[11:52] <cfbolz> ok
+[11:52] <cfbolz> berkin_: which bench triggers this?
+[11:52] <berkin_> cfbolz: i'm not 100% sure how to use virtualizables properly :)
+[11:52] <cfbolz> nobody is
+[11:55] <berkin_> cfbolz: so my understanding is that you can only have one red variable (e.g. state) that can have virtualizable fields, right?
+[11:56] <fijal> dmlockhart: yes
+[11:56] <fijal> berkin_: I don't know I was afraid to run the second one
+[11:57] <berkin_> fijal: which one did you run? we can send a smaller "microbenchmark" or something in MIPS-like "parc" ISA
+[12:01] <dmlockhart> fijal: I'm wondering if its using too much memory
+[12:01] <dmlockhart> berkin_: has been working on a sparse memory representation, but currently we have to allocate pretty large memory arrays for machine emulation; and they aren't sparse
+[12:03] <berkin_> dmlockhart: yeah, it could be memory
+[12:03] <berkin_> especially if the host doesn't have much RAM
+[12:04] <dmlockhart> the machines we are simulating on have like 48GB of RAM...
+[12:04] <berkin_> fijal, cfbolz: sparse memory is another thing we would like to implement
+[12:05] <berkin_> i did some experiments with it but it seems to slow down the execution because of the additional dereferencing
+[12:07] <berkin_> i was thinking of constant promoting the memory block (similar to a page) but i'm worried it might be even worse for highly divergent memory accesses that don't hit the same memory block
+[12:12] == krono_ [~krono@unaffiliated/krono] has joined #pypy-sync
+[12:15] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com] has quit [Ping timeout: 272 seconds]
+[12:15] <berkin_> cfbolz: regarding the error i was mentioning, i pushed a branch called "vable-rf"
+[12:15] <cfbolz> berkin_: yes, I just got it with my own experiments
+[12:15] <cfbolz> seems like a jit bug
+[12:15] <berkin_> i see
+[12:16] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 265 seconds]
+[12:16] == krono_ [~krono@unaffiliated/krono] has quit [Ping timeout: 255 seconds]
+[12:42] <cfbolz> berkin_: ok, the bug is complex, I unfortunately won't fix that today :-(
+[12:43] <cfbolz> berkin_: can you send me the benchmark that's slower than no-jit?
+[12:43] <berkin_> cfbolz: i see, thanks for looking into it!
+[12:43] <berkin_> sure, i'll send it
+[12:44] <cfbolz> berkin_: it's interesting, since you're using the rpython jit on a very different flavour of code than we ever do :-)
+[12:44] == antocuni [~antocuni@host254-121-dynamic.31-79-r.retail.telecomitalia.it] has quit [Ping timeout: 264 seconds]
+[12:45] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has joined #pypy-sync
+[12:46] <dmlockhart> sorry I'm back
+[12:51] <cfbolz> berkin_: did you try to see whether my changes break anything?
+[12:52] <berkin_> cfbolz: yes, i've been looking at it
+[12:52] <berkin_> it doesn't break anything, but i don't seem to be able to replicate the speedups you were seeing
+[12:53] <berkin_> it's around the same execution time for me for some reason
+[12:53] <cfbolz> berkin_: interesting
+[12:54] <berkin_> i was able to make the registers virtualizable (not the N, Z, C, V flags) yesterday without hitting the jit bug yesterday
+[12:55] <berkin_> and for most of the benchmarks, virtualizable registers seem to slow down the execution
+[12:55] <berkin_> not quite sure why
+[12:55] <cfbolz> Which is pretty weird in itself
+[12:56] <cfbolz> berkin_: random question, did you ever try O0 binaries?
+[12:59] <berkin_> cfbolz: no, that's a good idea
+[12:59] <berkin_> they might be faster
+[13:00] <cfbolz> Not faster, but they might get larger speedups vs other emulatorr
+[13:00] <berkin_> yes, that's what i meant
+[13:02] <dmlockhart> cfbolz: h264 and other arm benchmarks sent
+[13:02] <cfbolz> dmlockhart: thanks
+[13:05] <dmlockhart> this is where our current performance is at: http://i.imgur.com/vZ9NGdQ.png
+[13:06] <berkin_> cfbolz: looking at the PYPYLOG of my experiments from yesterday with virtualizable registers, the one with virt. regs have 50% more "trace too long" aborts and 10% fewer "nvirtuals"
+[13:06] <cfbolz> aha!
+[13:06] <berkin_> not quite sure how to interpret this
+[13:06] <cfbolz> berkin_: you need to implement the --jit cmdline args
+[13:06] <cfbolz> to be able to increase the threshold
+[13:07] <cfbolz> berkin_: there's a maximum size of traces
+[13:10] <cfbolz> berkin_: here's how to do that:
+[13:10] <cfbolz> https://bitbucket.org/cfbolz/pyrolog/src/b302eddc2815e30ad067858ddc8db5492822b324/targetprologstandalone.py?at=default#cl-24
+[13:11] <cfbolz> Then you can say --jit trace_limit=100000
+[13:11] <cfbolz> And see whether that number changes anything
+[13:12] <berkin_> cfbolz: ah i see
+[13:12] <berkin_> i was going to hard-code the parameters, but it makes much more sense to do this in command line
+[13:13] <cfbolz> berkin_: yes, faster to experiment
+[13:14] <berkin_> these are run-time cmd arguments right? not translation-time
+[13:14] <cfbolz> berkin_: yes
+[13:15] <cfbolz> berkin_: another thing you can try is this option: --jit enable_opts=intbounds:rewrite:virtualize:string:earlyforce:pure:heap
+[13:15] <cfbolz> That disables loop invariant code motion, which is where the virtualizable register crash seems to come from
+[13:16] <berkin_> cfbolz: aha, that's useful to try
+[13:17] <cfbolz> berkin_: anyway, those are my ideas for today. I will try to have a look at h264ref later. Let me know how things go
+[13:18] <berkin_> cfbolz: thanks a lot for your help!
+[13:18] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[13:18] <berkin_> i have a lot to try and experiment now :)
+[13:18] <cfbolz> berkin_: not *that* useful yet ;-)
+[13:18] <cfbolz> berkin_: yes, sorry, hope I didn't overload you
+[13:19] <berkin_> cfbolz: not at all! new ideas are always welcome :)
+[13:19] <cfbolz> berkin_: maybe we can have a Skype after the deadline
+[13:20] <berkin_> cfbolz: sounds good. i'm also working on a rpython-based scheme interpreter for another project, we can talk about that too
+[13:21] <cfbolz> berkin_: did you look at Pycket yet?
+[13:22] <berkin_> cfbolz: not that much in detail, i probably should
+[13:22] <cfbolz> berkin_: actually some of the challenges of running scheme and of running machine code when using a tracing jit are related, because of tco a tail call is pretty similar to a jump
+[13:23] <berkin_> cfbolz: we have some ideas on how to do hardware acceleration for rpython-based interpreters
+[13:23] <cfbolz> Advanced :-)
+[13:23] <berkin_> that's why i was bulding a "simple" scheme interpreter
+[13:26] <cfbolz> Right
+[13:26] <cfbolz> Then I guess don't look at Pycket, it's not really simple
+[13:30] <dmlockhart> cfbolz: did you interact much with Jeremy Siek on the Pycket paper?
+[13:31] <cfbolz> dmlockhart: yes, why m
+[13:32] <dmlockhart> he's done some really interesting stuff on gradual typing for things other than Python, and I'd be curious to get his thoughts on improving types for hardware design
+[13:33] <dmlockhart> (we have another project where we built a hardware description language in Python that's really neat)
+[13:33] <dmlockhart> I was just curious how responsive he is to questions from strangers :)
+[13:34] <cfbolz> dmlockhart: he's super nice
+[13:35] <cfbolz> Just write him, or talk to him at a conference
+[13:35] <cfbolz> Really friendly and has broad interests
+[13:35] <dmlockhart> cool, good to hear
+[13:36] <fijal> berkin_: sorry I'm back
+[13:36] <fijal> I just run what's in arm/README
+[13:38] <dmlockhart> fijal: hopefully its up to date... yes
+[13:38] <fijal> dmlockhart: well it froze my computer
+[13:38] <fijal> dmlockhart: can I get a smaller benchmark?
+[13:39] <fijal> one thing that's maybe interesting is that virtualizables are done for Python
+[13:39] <dmlockhart> berkin_: do you have a smaller benchmark you can send to fijal?
+[13:39] <fijal> there is a possibility to do something simpler that's more efficient
+[13:39] <fijal> I do have cross compilation working
+[13:39] <fijal> just tell me what to do
+[13:40] <fijal> or how do I cross-compile for that particular ARM
+[13:40] <dmlockhart> fijal: so we have a special cross compiler that uses newlib, rather than glibc
+[13:41] <fijal> oh :/
+[13:41] <dmlockhart> glibc binaries don't work right now, so I'm not sure if your xcc setup will work
+[13:41] <berkin_> fijal: what sort of machine are you running?
+[13:41] <berkin_> fijal: like is it 32-bit or 64-bit, how much RAM do you have?
+[13:42] <berkin_> fijal: i suspect it's a memory issue
+[13:42] <fijal> I have a 64bit linux
+[13:42] <fijal> I have 8G
+[13:42] <berkin_> fijal: i was also working on a sparse memory version which uses a fraction of the memory, but it's not as efficient
+[13:43] <fijal> dmlockhart: the make did successfully run
+[13:43] <berkin_> fijal: it's in a separate branch: https://github.com/cornell-brg/pydgin/tree/sparse-mem
+[13:43] <fijal> (on the no-stdlib variant)
+[13:43] <fijal> berkin_: can I just try on a smaller thing?
+[13:43] <fijal> and why is the memory impact that big anyway?
+[13:43] <dmlockhart> fijal: I think the problem is the memory size we are initializing might be too big. we initialize a memory array that is 2**27 words
+[13:43] <fijal> what do you guys use for memory?
+[13:44] <dmlockhart> if you look in arm/bootstrap.py
+[13:44] <berkin_> fijal: we basically have the entire simulated memory (potentially up to 4GB for 32-bit machines) in an int array
+[13:45] <fijal> berkin_: why not byte storage?
+[13:45] <fijal> (then you have 4G and not more)
+[13:45] <dmlockhart> fijal: accesses are almost always word size except in rare cases
+[13:45] <dmlockhart> we get much better performance if we use word arrays rather than byte arrays
+[13:45] <fijal> oh ok
+[13:46] <fijal> can I just make it smaller?
+[13:46] <berkin_> fijal: if we use byte storage, we see slowdowns (because the common case is a 32-bit access that would require 4 byte lookups)
+[13:46] <dmlockhart> fijal: yes you can try that.  I think I pointed you to the wrong memory size, its the one under EMULATE_SIMIT
+[13:46] <dmlockhart> actually let me think if there is a problem with the memory layout...
+[13:47] <fijal> ok, that's 3G * 8 (WORD) right?
+[13:47] <fijal> no it's divided by 4
+[13:47] <fijal> so it's 6G
+[13:47] <fijal> why 6G?
+[13:47] <berkin_> fijal: no, it's 3GB
+[13:48] <berkin_> word is 4
+[13:48] <berkin_> for 32-bit
+[13:48] <fijal> but I see [0] * (size >> 2)
+[13:48] <fijal> so you use the host word and not the emulated thing word
+[13:48] <berkin_> so should be 3GB total
+[13:49] <berkin_> fijal: good point
+[13:49] <cfbolz> fijal: support for 32bit ints on 64 bit machines is bad in RPython
+[13:49] <fijal> that surely does not improve performance ;-)
+[13:49] <fijal> cfbolz: you can really have a wrapper that casts them on input/output
+[13:49] <berkin_> fijal: yeah, is there a way to specify the type of an array to contain int32 only in rpython?
+[13:50] <fijal> yes, but there is no way to do arithmetics on them, you have to cast it
+[13:50] <fijal> [r_uint32(0)] * size
+[13:50] <cfbolz> fijal: right, but you still have to do lots masking when you do arithmetic
+[13:51] <fijal> cfbolz: you mean overflow check and stuff or what?
+[13:51] <cfbolz> Yes
+[13:51] <fijal> cfbolz: you only have to cast it back with a mask
+[13:51] <fijal> this seems feasible
+[13:51] <fijal> we can probably implement arithmetics on r_int32 and r_uint32 though
+[13:51] <fijal> (since they're nicely natively supported by C compiler)
+[13:51] <cfbolz> Well, we'd need ovf variants
+[13:52] <cfbolz> To set the arm cpu flags
+[13:52] <fijal> right
+[13:52] <fijal> but you can really implement it using 64bit arithmetic
+[13:52] <dmlockhart> we have a Bits data type for arbitrary bitwith arithmetic when doing hardware design. We'd eventually like to integrate it into pydgin so you dont have to do masking all the time to get stuff
+[13:52] <fijal> cfbolz: well note that it has to be done now anyway
+[13:52] <fijal> cfbolz: since all the arithmetics are done using 64bit now
+[13:52] <dmlockhart> like inst[32] instead of (inst >> 31) & 1
+[13:52] <cfbolz> fijal: yes, that's what they go atm
+[13:53] <dmlockhart> er, inst[31]
+[13:53] <fijal> so using a 32bit storage should not pose additional issues
+[13:53] <cfbolz> fijal: indeed
+[13:53] <fijal> berkin_: it's from rarithmetic
+[13:53] <cfbolz> fijal: anyway there is also an unroll bug that's blocking them
+[13:53] <fijal> ok, so how do I run something?
+[13:53] <cfbolz> fijal: see the mail I forwarded you
+[13:54] <fijal> given that I managed to compile something, I presume I have the cross-compiler working
+[13:56] <dmlockhart> fijal: arm/README should describe the run commands
+[13:56] <dmlockhart> you might want to try it pre translation
+[13:56] <berkin_> fijal: unfortunately, i don't think arm binaries with glibc/uclibc std c library would work with our simulator at the moment
+[13:56] <fijal> dmlockhart: yes, I know
+[13:56] <fijal> dmlockhart: "make" does compile "something"
+[13:56] <fijal> how do I compile something else?
+[13:57] <dmlockhart> fijal: i'm confused, are we talking about binaries or the interpreter
+[13:57] <fijal> make ubmark-vvadd
+[13:57] <fijal> this command
+[13:57] <dmlockhart> ah
+[13:57] <fijal> dmlockhart: no, I know how to compile the interpreter, it's how to compile benchmarks
+[13:59] <dmlockhart> so if you are using ubmark-nosyscalls, once you do make you should have some binaries like ubmark-vvadd
+[13:59] <dmlockhart> thats the simplest one
+[13:59] <fijal> ok
+[14:00] <fijal> so it really won't run any benchmarks with the current memory settings
+[14:00] <dmlockhart> you can try just running that directly with the arm-sim.py interpreter, but if if was a glibc/libc cross compiler toolchain I don't have much hope for them working
+[14:00] * fijal recompiles with a lot less mem
+[14:00] <fijal> dmlockhart: aren't they nosyscalls?
+[14:00] <dmlockhart> oh, good point :)
+[14:00] <dmlockhart> it might set up the stack differently? i guess we'll see
+[14:02] <fijal> http://paste.pound-python.org/show/zI34ZQxSLJwVkz4h27Ug/
+[14:02] <fijal> crash
+[14:03] <fijal> the binaries you sent to cfbolz run though
+[14:03] <fijal> oh and then segfault
+[14:03] <fijal> but that might be my low memory limit
+[14:04] <dmlockhart> fijal: I'll try to compile the nosyscall binaries using our XCC toolchain and send them to you
+[14:04] <berkin_> fijal: segfault is probably because the guest application ran out of memory
+[14:04] <fijal> berkin_: yes might be
+[14:04] * fijal tries storing r_uint32
+[14:05] <dmlockhart> fijal: which email should we use for you? Berkin has the nosyscall binaries compiled
+[14:05] <fijal> fijall at gmail
+[14:12] <berkin_> fijal: ok, i sent the binaries
+[14:29] <fijal> berkin_: http://paste.pound-python.org/show/L5kcaoisBkSuFZir4Njc/
+[14:33] <berkin_> fijal: cool! does it work?
+[14:37] <fijal> berkin_: seems so
+[14:37] <fijal> p69 = ((pydgin.storage._WordMemory)ConstPtr(ptr68)).inst_data
+[14:38] <fijal> data can be marked as immutable
+[14:42] <fijal> berkin_: I'm looking at traces, they look allright
+[14:42] <fijal> berkin_: but it might be the wrong benchmark
+[14:42] <fijal> berkin_: which one should I look at?
+[14:46] <dmlockhart> h264ref has the worst performance, but Im not sure you can run it with your memory limitations?
+[14:46] <dmlockhart> usually masked filter has pretty complex behavior
+[14:47] == dmlockha1t [~dmlockhar@nat-128-84-124-0-122.cit.cornell.edu] has joined #pypy-sync
+[14:49] == Remi_M1 [~remi@remi2.inf.ethz.ch] has joined #pypy-sync
+[14:50] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has quit [Ping timeout: 244 seconds]
+[14:51] <fijal> dmlockha1t: i did just go ahead and used r_uint32
+[14:51] <fijal> as pasted
+[14:51] <fijal> so I don't have the memory limit
+[14:51] <berkin_> fijal: awesome! i'll try the memory changes
+[14:52] <berkin_> fijal: yeah, h264ref is our achilles heel right now
+[14:52] <berkin_> jit performance is worse than non-jit
+[14:52] <fijal> oh ok
+[14:52] <fijal> how long does it take +-?
+[14:52] <fijal> berkin_: what paper are you guys writing btw?
+[14:53] <fijal> eh
+[14:53] <fijal> can you guys please add C-c support? ;-)
+[14:53] <fijal> (well I guess emulators don't always have them)
+[14:53] <dmlockha1t> fijal: ill swend you a copy
+[14:53] <berkin_> fijal: h264 takes a long time
+[14:53] <dmlockha1t> send*
+[14:54] <fijal> berkin_: can I have a shorter version to run?
+[14:54] <fijal> (I have one that cfbolz forwarded me)
+[14:54] <berkin_> fijal: however, you can use --max-insts 1000000000
+[14:54] <berkin_> or some other lower value
+[14:54] <berkin_> which basically runs the simulation for that many cycles
+[14:55] <fijal> sweet
+[14:56] <fijal> abort: trace too long:	154
+[14:56] <fijal> this is the problematic part
+[14:56] <fijal> I think
+[14:56] <fijal> it never compiles stuff
+[14:56] <berkin_> fijal: yeah, cfbolz was telling me to add a command line arg
+[14:56] <fijal> yes, please do
+[14:56] == Remi_M [~remi@remi2.inf.ethz.ch] has quit [Ping timeout: 264 seconds]
+[14:56] <fijal> essentially this is "it"
+[14:56] <fijal> the traces get aborted and never compiled
+[14:56] <berkin_> fijal: i'm about to experiment with larger traces
+[14:57] <fijal> I don't think having a limit, less so default one makes all that much sense
+[14:57] <fijal> berkin_: you know how to change it right?
+[14:57] <berkin_> fijal: yes
+[14:59] <berkin_> fijal: but for obnoxiously long traces, couldn't there be situations that hurt performance to compile?
+[14:59] <berkin_> fijal: or in other words, why was the limit put in the first place?
+[15:00] <fijal> berkin_: because the orignal limit is "if there is a function inside, stop inlining, compile it separately"
+[15:00] <fijal> however if there is no function inside, it just traces forever
+[15:00] <fijal> it's just idiotic, we should fix it
+[15:01] <berkin_> fijal: i see
+[15:03] <fijal> berkin_: the limits are meh
+[15:03] <fijal> berkin_: I'm in the middle of some refactorings in the JIT, but life kicks in sometimes
+[15:03] <berkin_> fijal: hahaha true
+[15:06] <dmlockha1t> fijal: draft sent
+[15:06] == dmlockha1t has changed nick to dmlockhart
+[15:09] <fijal> dmlockhart: thx
+[15:09] <fijal> dmlockhart: if you fix the limit, this particular benchmark should go A LOT faster
+[15:10] <fijal> dmlockhart: I see sjeng is slow too
+[15:13] <fijal> berkin_: I received only this one and the fastest one, can I get some other binaries please? ;-)
+[15:14] <dmlockhart> fijal: let me forward you the email with all the binaries
+[15:14] <fijal> cool thx
+[15:15] <dmlockhart> sent
+[15:18] <fijal> thx
+[15:23] <fijal> dmlockhart: I fail to read some of those slides
+[15:23] <fijal> dmlockhart: why is JIT always slower on SMIPS
+[15:24] <dmlockhart> fijal: you mean faster?
+[15:24] <fijal> in Table II
+[15:24] <fijal> pydgin nojit is faster than pydgin jit
+[15:24] <fijal> consumes less time
+[15:25] <dmlockhart> so we don't run the full benchmark for the simulators without JITs
+[15:25] <fijal> sjeng has the same problem (the trace limit)
+[15:25] <dmlockhart> we only run 10 billion instructions
+[15:25] <fijal> ah ok
+[15:25] <dmlockhart> i need to update the figure labels better
+[15:25] <fijal> but then the table is misrepresenting this badly somehow
+[15:25] <dmlockhart> so the Time* indicates 10billion instructions
+[15:25] * fijal recompiles with higher trace limit
+[15:25] <fijal> why would you care how long it take to run 10bln instructions?
+[15:26] <dmlockhart> so i mean 10billion simulated (target) instructions
+[15:26] <dmlockhart> and its because if you tried to run some of these benchmarks to completion on gem5 for example, it would take like 20+ days...
+[15:26] <fijal> lol
+[15:27] <fijal> I think this table can be done better to reflect that
+[15:27] <dmlockhart> so its pretty common in our field to only run a couple hundred million or billion instructions
+[15:27] <fijal> e.g. estimate how long would it take
+[15:27] <dmlockhart> fijal: thats a good idea
+[15:27] <fijal> dmlockhart: let's see how trace limit helps
+[15:28] <berkin_> fijal, cfbolz: i added --jit flag to pass jit parameters
+[15:29] <berkin_> i'm trying with larger trace limit now
+[15:29] <fijal> oh cool
+[15:29] <fijal> berkin_: can I just git pull?
+[15:29] <berkin_> fijal: yes
+[15:35] == xando_ [uid26666@gateway/web/irccloud.com/x-gwivhfzympswhlsx] has quit [Quit: Connection closed for inactivity]
+[15:36] <fijal> berkin_: hm, tracing takes a good part of forever now
+[15:36] <fijal> berkin_: maybe we should see how stuff can be split into functions instead
+[15:36] <berkin_> fijal: yeah, i was worried about that
+[15:37] <berkin_> fijal: what do you mean split into functions? how do you do that?
+[15:37] <fijal> where is your portal?
+[15:37] <dmlockhart> whats a portal?
+[15:38] <fijal> place that calls jit_merge_point
+[15:38] <fijal> in arm-sim
+[15:39] <fijal>    # the print statement in memcheck conflicts with @elidable in iread.
+[15:39] <fijal>     # So we use normal read if memcheck is enabled which includes the
+[15:39] <fijal>     # memory checks
+[15:39] <fijal> use llop.debug_print to avoid that problem
+[15:40] <berkin_> fijal: hmm, that's a good idea
+[15:40] <fijal> berkin_: generally the problem is that you will emit the trace for any number of instructions until you see the jump back right?
+[15:41] <berkin_> fijal: that's correct
+[15:41] <fijal> but that's definitely not ideal
+[15:41] <berkin_> maybe we need a more clever scheme
+[15:41] <fijal> you want to call the portal ("run" function) recursively at some level
+[15:42] <fijal> at least this is how our interpreters work
+[15:42] <fijal> where this is related to calling an applevel function
+[15:42] <berkin_> fijal: ah, to distinguish nested application loops?
+[15:42] <fijal> yes, something like that
+[15:43] <fijal> not directly nested loops, but nested functions
+[15:43] <fijal> I'm not sure what scheme is good
+[15:43] <fijal> is there a "CALL" instruction on ARM?
+[15:43] <fijal> ld*?
+[15:44] <fijal> no, that's load
+[15:44] <dmlockhart> fijal: do you mean any branching behavior?
+[15:44] <fijal> no, not branching
+[15:44] <fijal> hm
+[15:44] <fijal> I'm not sure what's the correct name here even
+[15:45] <fijal> for interpreters of high level languages this is really any sort of call
+[15:45] <fijal> but here, what you want is probably detect some sort of pattern
+[15:45] <berkin_> fijal: in arm lingo, the instructions that change your PC are branches
+[15:45] <fijal> right
+[15:45] <berkin_> fijal: they could be conditional or non-conditional (aka a jump)
+[15:45] <fijal> but say on x86 there are specific CALL instructions
+[15:45] <fijal> which are ESSENTIALLY branches
+[15:45] <berkin_> fijal: and they can have link
+[15:45] <dmlockhart> let me see what x86 call does
+[15:46] <berkin_> fijal: for instance bl "branch with link" is like a call
+[15:46] <fijal> berkin_: yes, that one
+[15:46] <fijal> berkin_: see what happens if instead of branching, you recursively call run() in bl
+[15:46] <fijal> (but not b)
+[15:46] <berkin_> fijal: this is a good idea
+[15:47] <fijal> well, I don't know yet :)
+[15:47] <fijal> but I expect the problems with long traces to be mitigated somehow
+[15:47] <berkin_> fijal: i guess an issue might be that optimizations in the target application might inline function calls
+[15:48] <berkin_> fijal: which won't use actual "call" instruction
+[15:48] <fijal> berkin_: that's fine
+[15:48] <fijal> berkin_: we want to respect those choices, but still have bl in places
+[15:48] <fijal> (they won't inline indefinitely anyway)
+[15:49] <cfbolz> berkin_, fijal: writing stuff recursively is a hard problem
+[15:50] <fijal> cfbolz: right, but we have to do SOMETHING
+[15:50] <fijal> cfbolz: right now for any non-trivial program, you're a bit out of luck
+[15:50] <fijal> because you end up in tracing-forever-bridges hell
+[15:50] <berkin_> cfbolz: what do you mean "writing stuff recursively"?
+[15:50] <fijal> berkin_: btw, it's not just processors, PHP running wordpress is the same nightmare
+[15:51] <fijal> berkin_: if you don't want to check for max_instructions, you can make that thing quasi-immutable somewhere
+[15:51] <fijal> berkin_: which means it'll be optimized away if passed 0
+[15:51] <cfbolz> berkin_: the question is, can we map recursion in the arm machine code to recursion in the interpreter
+[15:52] <cfbolz> berkin_: but I really think this is a post paper problem
+[15:53] <dmlockhart> so the primary problem with h264ref right now is the fact the traces are so long; they aren't getting jitted
+[15:53] <dmlockhart> jit aborts?
+[15:54] <cfbolz> dmlockhart: yes
+[15:54] <cfbolz> Did you play with increasing the time limit yet?
+[15:54] <fijal> cfbolz: then you end up with bridge-compiling hell
+[15:54] * fijal tries
+[15:55] <fijal> you really need to end the traces somewhere
+[15:55] <cfbolz> fijal: better than just not compiling anything at all
+[15:56] <fijal> cfbolz: from benchmarks I run a bit unclear :)
+[15:56] <fijal> you use less memory
+[15:56] <fijal> and you're not slower
+[15:56] <fijal> (yes it's that bad)
+[15:56] <cfbolz> fijal: what is? Trace limit?
+[15:57] <fijal> you essentially never stop compiling bridges
+[15:57] <fijal> because they're very very long and the potential number of combinations is exponential
+[15:57] <fijal> so "better then never compiling anything at all" is a bit unclear
+[15:57] <fijal> I never managed to run wordpress on hippy for long enough to stabilize for example
+[15:57] <fijal> (with any trace limit)
+[15:57] <fijal> [I mean, like hours]
+[15:58] <cfbolz> :-(
+[15:58] <fijal> no, I don't have an answer
+[15:58] <fijal> "don't write code like wordpress"
+[15:58] <fijal> but not sure what's the answer in terms of processor emulators
+[15:59] <fijal> ok, putting a recursive call in bl is a bad idea of course
+[15:59] <berkin_> cfbolz, fijal: i'll quickly experiment with using bl (call) and bx (return) to recursively call the portal
+[15:59] <fijal> because we hit StackOverflow immediately
+[15:59] <fijal> berkin_: you need to use something in bx, like exit the portal
+[15:59] <fijal> e.g. via an exception
+[16:00] <berkin_> fijal: yes, i'm thinking something like that
+[16:00] <dmlockhart> ideally we'd like to improve h264ref, but if we can't its okay as long as we have an explanation
+[16:00] <dmlockhart> future work :)
+[16:00] <berkin_> cfbolz, fijal: a little unrelated, but are exceptions "expensive" in rpython?
+[16:00] <cfbolz> :-)
+[16:01] <fijal> berkin_: nope :)
+[16:01] <fijal> berkin_: they can be happily used for control flow
+[16:01] <berkin_> fijal: ok, cool :)
+[16:01] <fijal> dmlockhart: what's the deadline?
+[16:01] <fijal> berkin_: I'm trying let's see
+[16:05] <dmlockhart> fijal: saturday the 31st at an unknown time :)
+[16:05] <dmlockhart> they dont really tell you the time...
+[16:21] <fijal> berkin_: ok, I now run into issues with virtualizables
+[16:21] <fijal> which is maybe expected
+[16:21] <fijal> I gonna go to sleep, good luck hacking it
+[16:21] <berkin_> fijal: ah, yeah, there are issues with virtualizables
+[16:22] <berkin_> fijal: thanks a lot for your help and ideas :)
+[16:28] <cfbolz> berkin_: do call and return clear the flags?
+[16:30] <berkin_> cfbolz: i don't think so
+[16:30] <cfbolz> Right, didn't think so
+[16:30] <berkin_> i'll double check in the isa manual
+[16:31] <cfbolz> berkin_: so, to fix virtualizable with recursion you would have to make a new state instance
+[16:31] <berkin_> for every recursion level?
+[16:31] <cfbolz> Yes
+[16:31] <cfbolz> It gets optimized away
+[16:32] <cfbolz> What I wonder though, does bl and bx really guarantee a full stack discipline?
+[16:32] <cfbolz> Ie are they consistently nested?
+[16:34] <berkin_> cfbolz: good point, my gut feeling is that if they don't guarantee the stack discipline, the program is wrong
+[16:34] <cfbolz> berkin_: I don't know, I wonder whether the compiler abuses these instructions to do weird things
+[16:39] <berkin_> cfbolz: is there any other way to force a new trace to be generated instead of a recursive call to the portal?
+[16:40] <cfbolz> Not easy
+[16:41] <cfbolz> berkin_: did you try recursive?
+[16:41] <berkin_> still working on it
+[16:42] <cfbolz> berkin_: it's a mess?
+[16:43] <berkin_> cfbolz: i don't think it's that bad
+[16:44] <cfbolz> berkin_: if you are at a good stage, push to a branch and I'll take a look
+[17:28] <cfbolz> berkin_: do you happen to known which arm register number is used for the stack pointer/frame pointer?
+[17:36] <berkin_> cfbolz: sorry i was away
+[17:36] <cfbolz> np
+[17:36] <berkin_> stack pointer is 13
+[17:36] <cfbolz> ok, thought so
+[17:36] <berkin_> frame pointer is 11
+[17:36] <cfbolz> thx
+[17:36] <berkin_> it's on line 47-53 in isa.py
+[17:37] <cfbolz> berkin_: found a small problem: https://github.com/cornell-brg/pydgin/blob/master/pydgin/storage.py#L152
+[17:37] <cfbolz> this line is superfluous
+[17:37] <cfbolz> since all the if cases do a write already
+[17:38] <cfbolz> ah, no
+[17:38] <cfbolz> put differently:
+[17:38] <cfbolz> there's a return missing in the 4 case
+[18:01] <berkin_> cfbolz: ah, good catch!
+[18:02] <cfbolz> berkin_: I get seeing two writes in traces and was confused
+[18:02] <cfbolz> berkin_: I also have a somewhat silly idea about registers, currentrly trying
+[18:02] <berkin_> cfbolz: i was going to say i haven't seen double writes in the traces
+[18:03] <berkin_> but yeah, i guess the jit didn't optimize that away
+[18:03] <berkin_> should remove that
+[18:03] <cfbolz> https://www.irccloud.com/pastebin/VLLK3AEX
+[18:03] <cfbolz> I see stuff like that
+[18:03] <cfbolz> ah, never mind
+[18:03] <cfbolz> hm, let me find an example
+[18:04] <cfbolz> https://www.irccloud.com/pastebin/ZV4WmhpX
+[18:04] <cfbolz> this one
+[18:05] <berkin_> cfbolz: i see, yeah
+[18:05] <berkin_> i guess the jit is optimizing some of it away, but not all
+[18:05] <cfbolz> and yes, the optimizer should fix that :(
+[18:05] <cfbolz> maybe, yes
+[18:06] <berkin_> cfbolz: i can send you the assembly dumps of the benchmarks if you want
+[18:06] <berkin_> currently we don't have a disassembler in the simulator
+[18:06] <berkin_> so we just print the pc in the traces
+[18:06] <cfbolz> yes, getting the instruction would be nice
+[18:06] <cfbolz> in the trace
+[18:07] <cfbolz> but actually I'm pretty good at guessing what the instructions do :-)
+[18:07] <berkin_> i'll send you the assembly dumps
+[18:07] <berkin_> hahaha :)
+[18:07] <berkin_> you can use the pc to see what instruction it corresponds to
+[18:08] <cfbolz> right
+[18:27] <cfbolz> berkin_: I'm heading off, it's a bit late here are
+[18:27] <cfbolz> berkin_: good luck, let me know how things go
+[18:28] <berkin_> cfbolz: good night, thanks again for your help
+[18:29] <berkin_> i'll send you the assembly dumps soon
+[18:29] <cfbolz> berkin_: this thing is hard :-(
+[18:29] <berkin_> hahaha yeah
+[18:29] <cfbolz> I'm used to having tons of useless operations in a dynamic language interpreter, and getting huge wins easily
+[18:30] <berkin_> we spent quite a bit of time trying to optimize as much as we could
+[18:30] <berkin_> it's kind of flattering that we didn't miss out too many obvious optimizations :)
+[19:32] == fijal [~fijal@105-208-228-248.access.mtnbusiness.co.za] has quit [Ping timeout: 272 seconds]
+[19:48] == fijal [~fijal@105.186.94.247] has joined #pypy-sync
+[20:13] == krono [~krono@unaffiliated/krono] has quit [Remote host closed the connection]
+[20:16] == dmlockhart [~dmlockhar@nat-128-84-124-0-122.cit.cornell.edu] has quit [Ping timeout: 244 seconds]
+[20:23] == dmlockhart [~dmlockhar@nat-128-84-124-0-496.cit.cornell.edu] has joined #pypy-sync
+[20:27] == dmlockhart [~dmlockhar@nat-128-84-124-0-496.cit.cornell.edu] has quit [Ping timeout: 246 seconds]
+[20:52] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com] has joined #pypy-sync
+[21:44] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[21:49] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 255 seconds]
+[23:44] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[23:49] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 276 seconds]
+[00:06] == fijal [~fijal@105.186.94.247] has quit [Ping timeout: 264 seconds]
+[01:05] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[01:10] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 245 seconds]
+
+[11:46] == berkin [8054e0f3@gateway/web/freenode/ip.128.84.224.243] has joined #pypy-sync
+[12:11] == fijal [~fijal@105.186.94.247] has quit [Ping timeout: 240 seconds]
+[12:14] <berkin> cfbolz: hi
+[12:14] <berkin> cfbolz: i've been working on the recursive call stuff if you want to take a look: https://github.com/cornell-brg/pydgin/tree/recursive-run
+[12:15] <berkin> cfbolz: it was more tricky than i though...
+[12:15] <berkin> cfbolz: i have some questions about forcing virtualizables
+[12:16] <berkin> cfbolz: now tracing seems to be aborted a lot because of virtualizable escape
+[12:16] <berkin> cfbolz: i tried to use the force_virtualizable hint, but i'm not sure if i'm using it correctly
+[12:16] <cfbolz> hey
+[12:17] <cfbolz> berkin: I can take a look in a bit
+[12:17] <cfbolz> berkin: did you measure at all?
+[12:18] <cfbolz> And yes, this forcing stuff is tricky to get right...
+[12:18] <berkin> cfbolz: the performance? it's about the same as before for h264
+[12:18] <cfbolz> Haha, OK
+[12:18] <cfbolz> Anyway, will look in a bit
+[12:18] <berkin> cfbolz: but most of the trace too long abortions turned into vable escape abortions
+[12:18] <berkin> so if we can fix those, it might improve the performance?
+[12:20] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[12:21] <cfbolz> berkin: yes, that's the hope
+[12:30] <cfbolz> berkin: if you have time, one thing that would probably be useful is to have a microbenchmark as follows: an outer loop calling a function that contains an inner loop. Compile with O0 to prevent inlining
+[12:30] <berkin> cfbolz: ah good idea
+[12:30] <berkin> cfbolz: i'll write something quick
+[12:40] == krono [~krono@unaffiliated/krono] has quit [Remote host closed the connection]
+[12:41] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[12:43] == rguillebert [~rguillebe@37.164.103.35] has joined #pypy-sync
+[12:47] == Remi_M1 [~remi@remi2.inf.ethz.ch] has quit [Quit: See you!]
+[12:59] == rguillebert [~rguillebe@37.164.103.35] has quit [Ping timeout: 272 seconds]
+[13:40] <cfbolz> berkin: ok, i'm looking now...
+[13:42] <berkin> cfbolz: ok, i wrote a small microbenchmark as well
+[13:42] <berkin> cfbolz: i'll send it to you
+[13:42] <cfbolz> thanks
+[13:48] <berkin> cfbolz: ok sent it
+[13:48] <cfbolz> thx
+[13:48] <berkin> one thing that was a bit hacky is how to do function returns
+[13:49] <cfbolz> yes, I actually wonder about the call stack
+[13:49] <berkin> the thing is the compiler does some optimizations where it might return from multiple levels
+[13:49] <cfbolz> what happens if you don't find the correct level to return to?
+[13:50] <berkin> so whenever i see a return from function, i search the return pc in the last 5 or so function calls
+[13:50] <berkin> if not, i just ignore it
+[13:50] <berkin> if i can't find it
+[13:50] <berkin> it's not ideal
+[13:50] <cfbolz> berkin: that has the risk though that you build up more and more stack
+[13:50] <cfbolz> maybe it would be better to instead continue at the topmost level
+[13:51] <berkin> cfbolz: i agree, but we can maybe check if the call stack is growing a lot, then just work on the topmost level as you said
+[13:53] <cfbolz> maybe yes
+[13:54] <cfbolz> berkin: ok, I have two ideas:
+[13:54] <cfbolz> 1) get rid of the call stack list, and link the State instances directly by just adding a prev link of some form
+[13:57] <berkin> cfbolz: hmm, sure, i can try that
+[13:57] <cfbolz> so, 2) is more radical
+[13:57] <cfbolz> I am less sure about: you could implement returns like this: raise ReturnException(new_pc, self)
+[13:58] <cfbolz> then on every level you would catch the exception, check whether the pc matches, if not raise it further
+[13:58] <cfbolz> if yes, copy the data from the state in the ReturnException
+[13:58] <cfbolz> that way, you don't need an explicit stack at all
+[13:58] <berkin> i see
+[13:58] <cfbolz> if you arrive at the toplevel, you *always* continue, of course
+[13:59] <berkin> do you think it's the explicit stack that's causing the virtualizable escapes?
+[13:59] <cfbolz> I also have a notion that that could maybe fix the virtualizable escapes
+[13:59] <cfbolz> :-)
+[13:59] <cfbolz> yes, not unlikely
+[14:00] <berkin> so from the traces i can see that virtualizable escapes happen on function calls
+[14:00] <berkin> not returns
+[14:01] <berkin> maybe it doesn't go that far to returns
+[14:01] <cfbolz> ah, interesting
+[14:01] <cfbolz> let me look what could be the cause
+[14:01] <berkin> i'm not sure if i'm using the forcing hint correctly
+[14:01] <berkin> i took a look at pypy, that's my understanding on how to use it
+[14:02] <cfbolz> berkin: what happens if you leave it out?
+[14:02] <cfbolz> particularly the one in __init__?
+[14:02] <berkin> cfbolz: i think it's the same behavior
+[14:02] <cfbolz> so why did you add the hint at all? did rpython tell you to?
+[14:03] <cfbolz> because if in doubt, I'd just not have it at all
+[14:03] <berkin> no, i tried to get rid of virtualizable escapes
+[14:03] <berkin> it translated fine otherwise
+[14:03] <cfbolz> right
+[14:04] == dmlockha1t [~dmlockhar@nat-128-84-124-0-633.cit.cornell.edu] has joined #pypy-sync
+[14:04] <cfbolz> berkin: so, I suspect that if you remove the hints and try 2) above, it could help
+[14:07] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has quit [Ping timeout: 272 seconds]
+[14:08] <berkin> cfbolz: ok, i'll try that now
+[14:09] <cfbolz> berkin: ok. I'll go have dinner, but will be around later to look at it once more
+[14:09] <berkin> cfbolz: sounds good. thanks for taking a look
+[14:09] <cfbolz> cheers
+[14:14] == antocuni [~antocuni@host254-121-dynamic.31-79-r.retail.telecomitalia.it] has joined #pypy-sync
+[14:58] == fijal [~fijal@105-208-58-19.access.mtnbusiness.co.za] has joined #pypy-sync
+[15:04] == antocuni [~antocuni@host254-121-dynamic.31-79-r.retail.telecomitalia.it] has quit [Ping timeout: 264 seconds]
+[15:11] == dmlockha1t has changed nick to dmlockhart
+[15:25] == xando_ [uid26666@gateway/web/irccloud.com/x-cgcctnnnixemydbo] has quit [Quit: Connection closed for inactivity]
+[15:44] == fijal [~fijal@105-208-58-19.access.mtnbusiness.co.za] has quit [Read error: Connection reset by peer]
+[16:37] <cfbolz> berkin: getting somewhere?
+[16:38] <berkin> cfbolz: i removed the explicit call stack and the hints, but there is still the same virtualizable escape problem
+[16:38] <cfbolz> berkin: is it pushed? I'll take a look
+[16:38] <berkin> i'll push just a sec
+[16:41] <berkin> cfbolz: ok pushed: https://github.com/cornell-brg/pydgin/tree/recursive-run
+[16:41] <berkin> i didn't try the exception approach (idea 2)
+[17:39] <cfbolz> berkin: something is weird
+[17:39] <cfbolz> for the microbench, the jit is not activated at all
+[18:03] == krono [~krono@unaffiliated/krono] has quit [Remote host closed the connection]
+[18:17] == dmlockhart [~dmlockhar@nat-128-84-124-0-633.cit.cornell.edu] has quit [Ping timeout: 276 seconds]
+[18:35] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[18:36] <berkin> cfbolz: sorry i was away
+[18:36] <berkin> sorry i forgot to mention, you should provide an argument
+[18:36] <berkin> like 1000
+[18:36] <cfbolz> Argh, OK
+[18:36] <cfbolz> That's easy
+[18:37] <berkin> that's how many times the outer loop will run
+[18:37] <cfbolz> Maybe I should have looked at the code ;-)
+[18:40] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 256 seconds]
+[18:54] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com] has joined #pypy-sync
+[19:01] <cfbolz> berkin: sorry, I'm really not getting anywhere, calling it a night
+[19:01] <cfbolz> Sorry :-(
+[19:02] <berkin> cfbolz: no worries, thanks a lot for looking into it :)
+[19:02] <cfbolz> We should be able to fix it, but not under time pressure
+[19:03] <berkin> yeah, the results in the paper are quite compelling already, but there are still bunch of cool stuff we can do after the deadline
+[19:03] <cfbolz> Yes, plenty
+[19:04] <cfbolz> Eg improving the JIT itself ;-)
+[19:04] <dmlockhart> yes, thanks again for all the help!
+[19:04] <cfbolz> BTW, can you let me know when the paper is online somewhere?
+[19:04] <cfbolz> Would like to link to it
+[19:05] <dmlockhart> cfbolz: sure, not sure if we can do it until after the conference in march
+[19:05] <dmlockhart> will have to discuss with the advisor
+[19:05] <cfbolz> dmlockhart: usually you can put a private preprint on your Web page
+[19:06] <dmlockhart> okay, I'll look into it
+[19:06] <cfbolz> Would be cool
+[19:06] <cfbolz> Night
+[19:06] <dmlockhart> good night
+[20:02] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com] has quit [Read error: Connection reset by peer]
+[20:30] == arigato [~arigo@178.238.175.162] has quit [Quit: Leaving]
+[20:32] == dmlockhart [~dmlockhar@cpe-74-67-213-35.twcny.res.rr.com] has joined #pypy-sync
+[20:36] == krono [~krono@unaffiliated/krono] has joined #pypy-sync
+[20:41] == krono [~krono@unaffiliated/krono] has quit [Ping timeout: 244 seconds]

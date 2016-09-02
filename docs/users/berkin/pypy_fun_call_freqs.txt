@@ -1,0 +1,15 @@
+fun call target freqs:
+fun fa0e6c    = 432366135 (12.581338)   pypy_g_replace__unicode_unicode
+fun dd698     = 349264412 (10.163177) t pypy_g_ll_call_lookup_function__v31215___simple_call(float)
+fun db48c     = 186700207 (5.432753)  t pypy_g__str_join_many_items__v21774___simple_call__func
+fun 8fbcb8    = 81859124 (2.382003)     pypy_g_DictStrategy_values
+fun 4c1cc     = 74974173 (2.181659)   t pypy_g__ll_list_resize_hint_really__v29707___simple_cal
+fun dd640     = 72757935 (2.117169)   t pypy_g_ll_call_lookup_function__v29533___simple_call(float)
+fun afcd5a50  = 53278205 (1.550332)     (jit generated?)
+fun 1e3990    = 38331754 (1.115408)   t pypy_g_getitems_copy__v20519___simple_call_function
+fun dd63c     = 32527788 (0.946520)
+fun 10f51d8   = 26179468 (0.761791)
+fun 113f300   = 23958306 (0.697158)
+fun 1e37e4    = 21763543 (0.633293)
+fun fc8264    = 18927166 (0.550758)
+fun dd6dc     = 13129555 (0.382054)

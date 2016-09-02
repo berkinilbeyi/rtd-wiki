@@ -1,0 +1,90 @@
+
+while True:
+  inst = fetch(s.pc)
+  execute_fun = decode(inst)
+  execute_fun(state)
+
+def execute_add(s):
+  s.rf[rd] = s.rf[rs] + s.rf[rt]
+  pc += 4
+
+def execute_store(s):
+  s.mem[ s.rf[rs] ] = s.rf[rt]
+  pc += 4
+
+def execute_branch(s):
+  if s.rf[rs] != s.rf[rt]:
+    pc = branch_targ
+  else: pc += 4
+
+
+
+100: add    r2, r2, r1
+     store  [r2], r3
+     branch r2, r4, 100
+
+i_1 = rf[ 1 ]
+i_2 = rf[ 2 ]
+i_3 = rf[ 3 ]
+i_4 = rf[ 4 ]
+label( label1, i_2 )
+i_5 = i_2 + i_1
+mem[ i_5 ] = i_3
+i_6 = i_5 == i_4
+rf[ 2 ] = i_5
+guard_true( i_6 )
+jump( label1, i_5 )
+
+
+while True:
+  inst = fetch(state.pc)
+  execute_fun = decode(inst)
+  execute_fun(state)
+  instrument_insts(state)
+
+def execute_add(s):
+  s.rf[rd] = s.rf[rs] + s.rf[rt]
+  pc += 4
+
+def execute_store(s):
+  s.mem[ s.rf[rs] ] = s.rf[rt]
+  pc += 4
+  instrument_memop(s)
+
+def execute_branch(s):
+  if s.rf[rs] != s.rf[rt]:
+    pc = branch_targ
+  else: pc += 4
+
+# inlined insturmentation that will
+# be triggered for all instructions
+def instrument_inst(s):
+  s.num_insts += 1
+
+# outlined instrumentation that will
+# be triggered by memory operations
+@jit.dont_look_inside
+def instrument_memop(s):
+  # complicated instumentation
+  
+
+100: add    r2, r2, r1
+     store  [r2], r3
+     branch r2, r4, 100
+
+i_1 = rf[ 1 ]
+i_2 = rf[ 2 ]
+i_3 = rf[ 3 ]
+i_4 = rf[ 4 ]
+label( label1, i_2 )
+i_5 = i_2 + i_1
+# JIT-outlined instrumentation
+call( instrument_memop )
+mem[ i_5 ] = i_3
+i_6 = i_5 == i_4
+rf[ 2 ] = i_5
+# JIT optimizes this since there is no
+# exit point other than the branch
+num_insts = num_insts + 3
+guard_true( i_6 )
+jump( label1, i_5 )

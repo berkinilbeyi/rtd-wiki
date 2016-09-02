@@ -1,0 +1,398 @@
+==========================================================================
+ISPASS paper
+==========================================================================
+
+Title:
+JIT-Assisted Fast-Forwarding and Functional Warmup
+
+
+Abstract
+
+I. Introduction
+
+  - The need for longer accurate simulations (real-world workloads, and
+  accurate)
+
+  - Pin and DBT: cite topham work. Pin. only native. Not detailed enough
+
+  - Detailed simulation: Approaches to make simulations quicker, sampling, fast-forwarding etc.
+
+  - The need for changing binaries/inputs, sw/hw co-design
+
+  - Why haven't people done this before. Serious technical
+    challenge?
+    - static datasets (there wasn't much of a need)
+    - mismatch in abstractions (memory representation)
+    - hard to modify dbts
+
+  - Contributions
+    - Integrate a fast functional simulator into gem5 to make
+      fast-forwarding with sampling feasible (days to hours)
+    - Illustrate productivity of meta-tracing JITs to easily add
+      instrumentation, modeling, and show that we can easily integrate and
+      manipulate existing microarchitecture simulators
+
+II. SMARTS and SimPoints overview
+
+III. Pydgin and RPython overview
+
+our techniques/contributions:
+  bbv generation
+  zero-copy gem5 integration
+  cache-modeling in pydgin
+
+IV. BBV generation in Pydgin
+
+V. Pydgin+gem5 flow
+
+    - Integrating pydgin into gem5
+      - (zero-copy versus copy)
+
+    - Cache modeling in Pydgin
+      - (inlined vs. external function calls)
+
+VI. Methodology
+
+VII. Evaluation
+
+VII. Related work
+
+IX. Conclusion
+
+
+==========================================================================
+email from chris
+==========================================================================
+
+Berkin - Presentation in preparation for ISPASS submission. Should
+   sketch narrative for paper and include motivation, related work,
+   description of technique, and preliminary results. This is one week
+   before the ISPASS deadline so the narrative and results should be in
+   good shape by then.
+
+- 1. Motivate fast, accurate, and agile simulation to meet current
+   research needs. By "agile simulation" I mean that simulation
+   methodologies that enable easily exploring the impact of changing
+   programs, program inputss, compilers, or the hardware/software
+   interface. I think right here in the first paragraph we say we are
+   focusing on new and emerging architectures where native execution is
+   not appropriate -- so we try and make things like pin out of scope
+   right from the beginning?
+
+ - 2. Instruction-Set Simulation with Dynamic-Binary Translation: Mention
+   that ISS interpreters are not competitive. Reference state-of-the-art
+   in ISS+DBT. Include rough numbers for how fast the simulation is. End
+   with the conclusion that ISS DBT is fast and agile but not accurate.
+
+ - 3. Sampling-Based Detailed Simulation: Discuss SMARTS and SimPoints.
+   Introduce BBV generation for simpoints? Introduce fast fowarding and
+   functional warmup. These approaches are accurate and agile but not
+   fast -- because the fast fowarding dominates execution time. We should
+   somehow say that they are fast relative to full detailed simulation,
+   but in wall-clock time they are still very slow. Include rough numbers
+   on how long simulations might take.
+
+ - 4. Checkpoint-Based Detailed Simulation: maybe just check pointing one
+   point after bootup, or combined with something like SimPoints --
+   mention checkpointing and SMARTS don't really go together. These
+   approaches are fast and accurate but not agile.
+
+ - 5. So our goal is to enable fast, accurate, and agile simulation, but
+   prior work (ISS+DBT, sampling-based detailed simulation,
+   checkpoint-based detailed simulation) can only achieve two of these a
+   time. The obvious approach is to try and combine ISS+DBT with
+   Sampling-Based Detailed Simulation but to our knowledge no widespread
+   simulation framework has been able to implement this approach due to
+   two key challenges: (1) traditional ISS+DBT and detailed simulators
+   use very different frameworks requiring each to be executed separately
+   and thus an expensive "state marshalling" to transfer and convert
+   state to/from the ISS-DBT and detailed simulator; (2) traditional
+   ISS+DBT are note well-suited to adding the instrumentation for
+   basic-block vector tracking and functional warmup required for
+   sampling-based detailed simulation.
+
+ - 6. We are proposing two new techniques named JIT-Assisted Fast-Foward
+   Embedding (FFE) and JIT-Assisted Fast-Forward Instrumentation (FFI)
+   that can enable fast, accurate, and agile simulation. So JIT-Assisted
+   FFE is the idea that we can enable zero-copy state marshalling by
+   embedding the JIT for ISS+DBT into the detailed simulator. This has
+   many benefits: faster simulation times, single simulator, etc. What do
+   you think about grouping "BBV tracking" and "functional warmup" under
+   the heading of "Fast-Foward Instrumentation"? This gives us a nice
+   parallel between our two techniques: JIT-Assited FFE and FFI. I think
+   we should make BBV tracking a "first-class" aspect of the work --
+   because we say that sampling-based detailed simulation enables
+   accurate and agile simulation, it means that for simpoints you would
+   need to really be able to regenerate the BBV for every simulation (if
+   you are changing the program inputs, compile, hardware/software
+   interface). So while we should keep BBV tracking and the actual
+   sampling part separate in the results table, I think we should mention
+   two numbers when we discuss simpoints -- how long does it take to do
+   BBV+sampling and how long does it take to just do sampling. I think we
+   might want to emphasize that our JIT-Assisted FFI actually JITS the
+   instrumentation code too? That seems like a novel contribution? Can we
+   quantify the benefit of this though? This is the function
+   inline/outline idea.
+
+So given all of this, maybe this is a revised title?
+
+  JIT-Assisted Fast Foward Embedding and Instrumentation to
+  Enable Fast, Accurate, and Agile Simulation
+
+And this is a revised outline?
+
+ - 1. Introduction
+       . motivate fast, accurate, and agile simulation
+       . instruction-based simulation with dynamic binary translation
+       . sampling-based detailed simulation
+       . checkpoint-based detailed simulation
+       . challenge with combining ISS+DBT and detailed simulation
+       . introduce JIT-assisted FFE and FFI
+       . summary of results
+       . contributions
+
+ - 2. Background
+    + 2.1. ISS+DBT: Pydgin
+    + 2.2. Sampling-Based Detailed Simulation: SMARTS
+    + 2.3. Sampling-Based Detailed Simulation: SimPoints
+
+ - 3. JIT-Assisted Fast Forward Embedding and Instrumentation
+    + 3.1. JIT-Assisted Fast Forward Embedding
+       . describe our approach to embedding, zero-copy
+    + 3.2. JIT-Assisted Fast Forward Instrumentation
+       . describe instrumentation for BBV tracking
+       . describe instrumentation for functional warmup
+
+ - 4. Evaluation
+    + how should we structure the eval?
+    + can we put simulation results of gem5 BBV tracking and pydgin BBV
+      tracking in here?
+    + case study illustrating the benefit of fast, accurate, agile?
+
+ - 5. Related Work
+
+ - 6. Conclusions
+
+Once you have the functional warmup working, I think the last piece of
+code/simulation work we might want to do is the function inline/outline
+stuff for instrumentation. It would be intersting to see the performance
+impact of using pre-compiled function calls for both BBV and functional
+warmup. I think doing the pre-compiled function calls for BBV is easier
+than for functional warmup? We might also want to see if we can do some
+kind of "state marshalling" where Pydgin and gem5 are in different
+processes, but this might be too much work.
+
+Once you have the functional warmup working, I think you should take a
+break from simulator hacking since we will have enough results to submit
+something. It would be really useful if you could work on some writing. I
+would start by writing Sections 1, 2, and 5. Then send me what you have
+and I can review and give feedback. We can see how long that takes and
+maybe write section 3 -- and then go back to simulator hacking? Ideally
+we would have a draft of 1, 2, 3, 5, 6 (all but 4) ready by maybe the end
+of the weekend, so that next week you could focus on simulator hacking,
+results, tables, etc.
+
+
+--------------------------------------------------------------------------
+results
+--------------------------------------------------------------------------
+
+                #insts     SP #insts  SP K  gem5 atomic     gem5 detailed   gem5 simpoints  gem5 smarts     pydgin          pydgin sp gen   p+g simpoints   p+g smarts
+                                            IPS    time     IPS    time     IPS    time     IPS    time     IPS    time     IPS    time     IPS    time     IPS    time
+401.bzip2       195B       194B       25    2.4M   22h      54K    41d      2.0M   1.1d     2.2M   1.0d     613M   5.3m     519M   6.3m     29M    1.9h     47M    1.1h
+429.mcf         373B       373B       27    2.4M   1.8d     60K    72d      1.9M   2.2d     2.0M   2.1d     487M   13m      406M   15m      25M    4.2h     34M    3.1h
+445.gobmk       323B       316B       20    2.3M   1.6d     51K    74d      1.9M   1.8d     2.0M   1.8d     119M   45m      92M    59m      40M    2.2h     14M    6.3h
+456.hmmer       1112B      952B       13    2.3M   5.6d     67K    192d     1.9M   5.8d     2.1M   6.2d     582M   32m      534M   35m      195M   1.4h
+458.sjeng       2974B      2921B      13    2.4M   14d      58K    596d     2.1M   16d      2.1M   16d      260M   3.2h     173M   4.8h     160M   5.1h
+462.libquantum  3069B      3036B      17    2.6M   14d      66K    534d     2.1M   17d      2.2M   16d      605M   1.4h     464M   1.8h     292M   2.9h
+464.h264ref     753B       707B       15    2.4M   3.6d     66K    133d     2.0M   4.0d     2.1M   4.1d     732M   17m      627M   20m      157M   1.2h
+471.omnetpp     1282B      1254B      3     2.8M   5.4d     62K    240d     2.3M   6.2d     2.3M   6.4d     474M   45m      324M   1.1h     209M   1.7h
+473.astar       434B       397B       15    2.5M   2.0d     64K    78d      2.0M   2.3d     2.1M   2.3d     386M   19m      301M   24m      67M    1.6h
+
+--------------------------------------------------------------------------
+Figure 1: sampling methods
+--------------------------------------------------------------------------
+
+program phases:
+A B C A A D B A D A E B B A D E A C A D A D D C E A E B A D A F E E B
+    
+periodic sampling:
+----#----#----#----#----#----#----#----#----#----#----#----#----#----#
+
+random sampling:
+----#-#-----#-----#--#-#---#--------#-#---#-------#---#----#---#----#
+
+targeted sampling:
+------A---------D---E-------------C-------------------B--------F
+
+--------------------------------------------------------------------------
+Figure 2: Fast Forwarding, Warmup and simulation
+--------------------------------------------------------------------------
+
+                    sss                    sss                    sss
+--------=======########--------=======########--------=======########
+
+
+                            long-history    short-histry    statistics
+                            modeling        modeling
+                            (caches)        (core)
+Fast forwarding       --    no              no              no
+Functional warmup     ==    yes             no              no
+Detailed warmup       ##    yes             yes             no
+Detailed simulation   ##    yes             yes             yes
+
+--------------------------------------------------------------------------
+Figure 3: SMARTS flow
+--------------------------------------------------------------------------
+
+functional profiling to
+determine # instructions
+(optional)
+      |
+      v
+simulation
+(10,000 samples,
+2000 inst detailed warmup,
+1000 inst detailed simulation,
+functional warmup between samples)
+
+--------------------------------------------------------------------------
+Figure 4: SimPoint flow
+--------------------------------------------------------------------------
+
+functional profiling to
+generate BBVs
+      |
+      V
+generate SimPoints using
+clustering analysis
+      |
+      V
+simulation
+(maximum 30 samples,
+10M inst detailed simulation,
+fast-forwarding between samples)
+
+--------------------------------------------------------------------------
+Figure 5: PydginFF flow
+--------------------------------------------------------------------------
+
+ gem5 (C++)     compile
+          >-------------- .o files    \   link                  smarts/sp
+ pydgin.h                              >-------- gem5+pydginff ------------stats
+                                      /
+                  RPython TC   pydgin.so
+ Pydgin (RPython) -----------<                fun. profiling
+                               pydginff (bin) ---------- profile
+
+--------------------------------------------------------------------------
+Figure 6: FFE code example
+--------------------------------------------------------------------------
+
+pydgin.h:
+struct PydginArmArchState {
+  uint32_t rf[ 16 ];
+  uint32_t pc;
+  uint32_t cpsr;
+  uint32_t brk_point;
+};
+void pydgin_get_arch_state( struct PydginArmArchState* state );
+void pydgin_set_arch_state( struct PydginArmArchState* state );
+
+
+
+
+sim.py:
+CArmArchState = lltype.Struct( "PYdginArmArchState",
+                               ( "rf",
+                                  rffi.CFixedArray( rffi.UINT, 16 )),
+                               ( "pc",        rffi.UINT ),
+                               ( "cpsr",      rffi.UINT ),
+                               ( "brk_point", rffi.UINT ),
+                              )
+@entrypoint( "main", [lltype.Ptr( CArmArchState )],
+             c_name="pydgin_get_arch_state" )
+def pydgin_set_arch_state( ll_state ):
+  pc = rffi.cast( lltype.Signed, ll_state.pc )
+  ...
+
+--------------------------------------------------------------------------
+Figure 7: FFI code example
+--------------------------------------------------------------------------
+
+# optional:
+@dont_look_inside
+def mark_transaction( self, type, address ):
+  line_idx, tag  = self.get_idx_tag( address )
+  # get if hit or not, and the way if it was a hit
+  hit, way = self.get_hit_way( line_idx, tag )
+
+  if not hit:
+    # get a victim way and update the tag
+    way = self.get_victim( line_idx )
+    self.tag_array[ line_idx ][ way ] = tag
+ 
+  # mark dirty if a write
+  if type == WRITE:
+    self.dirty_array[ line_idx ][ way ] = True
+
+  # update replacement policy
+  self.update_lru( line_idx, way )
+
+def get_hit_way( self, line_idx, tag ):
+  for way in range( self.num_ways ):
+    if tag == self.tag_array[ line_idx ][ way ]:
+      return True, way
+  return False, -1
+
+--------------------------------------------------------------------------
+FFI code example: BBV generation
+--------------------------------------------------------------------------
+
+def mark_bb( self, old_pc, new_pc, num_insts ):
+  bb_idx = self.get_bb_idx( old_pc, new_pc )
+  # bb_idx will never be equal to -1 in JIT
+  if bb_idx == -1:
+    bb_idx = self.register_new_bb( old_pc, new_pc,
+                   num_insts - self.last_num_insts )
+  self.bbv[ bb_idx ].increment()
+  self.last_num_insts = num_insts
+
+# elidable promote decorator totally optimizes this
+# function away while in the JIT
+@elidable_promote()
+def get_bb_idx( self, old_pc, new_pc ):
+  # construct BB signature and check if it this BB was
+  # seen before
+  bb_sig = (old_pc << 32) | new_pc
+  if bb_sig not in self.bbv_map:
+    return -1
+  # by definition, a BB index will always be found in
+  # JIT
+  return self.bbv_map[ bb_sig ]
+
+
+--------------------------------------------------------------------------
+SMARTS
+--------------------------------------------------------------------------
+
+            sss            sss            sss            sss            sss
+=======########=======########=======########=======########=======########
+
+
+--------------------------------------------------------------------------
+SimPoints
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+JIT-assisted Fast Forward Embedding and Fast Forward Instrumentation
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Title ideas
+--------------------------------------------------------------------------
+
+JIT-assisted Fast-Forwarding and Functional Warmup
+
+JIT-Assisted Fast-Forward Embedding and Instrumentation to Enable Fast, Accurate, and Agile Simulation
+

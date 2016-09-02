@@ -1,0 +1,44 @@
+[09:49] == berkin [8054e0f3@gateway/web/freenode/ip.128.84.224.243] has joined #pypy-sync
+[09:49] -ChanServ- [#pypy] Welcome!
+[10:05] <berkin> fijal: hi
+[10:17] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has joined #pypy-sync
+[10:25] == gregor_w [~textual@docking.vis.ethz.ch] has quit [Ping timeout: 252 seconds]
+[10:39] <fijal> berkin: hi
+[10:43] <berkin> fijal: i'm thinking of not applying to GSoC
+[10:43] <berkin> my advisor is a bit worried about the time, that i won't be able to do much research
+[10:43] <berkin> but informally, i'm still interested in helping with the ARM backend
+[10:44] <berkin> and collaborating with you on various projects
+[10:54] == arigato [~arigo@178.238.175.236] has joined #pypy-sync
+[10:56] <fijal> berkin: ok
+[10:56] <cfbolz> berkin: :-(
+[10:56] <fijal> berkin: well, maybe we can think about another way you can contribute?
+[10:56] <fijal> or another form of summer internship?
+[10:56] <berkin> fijal: yes, i'm still very interested in contributing back
+[10:57] <berkin> and i'm planning to do most of the things i wrote in the proposal
+[10:57] <fijal> ok, cool
+[10:58] <berkin> i think this way i can balance research and pypy development better
+[10:58] <fijal> ok
+[10:58] <berkin> and seems like i don't need the funding through gsoc
+[10:58] <fijal> arigato: did you see my message about lync?
+[10:58] <fijal> berkin: well, if you don't need funding then it makes sense to have someone who does in GSoC
+[10:58] <fijal> in a way
+[10:58] <berkin> fijal: i agree, it would be better for someone else to make use of it
+[10:59] <fijal> ok
+[11:00] <berkin> one big reason why we thought gsoc would be useful is the mentorship aspect through you guys
+[11:00] <berkin> but you guys are really helpful even without gsoc :)
+[11:00] <fijal> our mentorship is regardless of gsoc :)
+[11:01] <arigato> berkin: I didn't catch the whole conversation, but thanks for withdrawing from gsoc for (partly) reasons of "it would be more cool if someone else got the google money" :-)
+[11:01] <arigato> berkin: yes, thanks
+[11:01] <fijal> berkin: :-)
+[11:01] <fijal> same here
+[11:01] <arigato> fijal: (sorry, the 2nd comment was for you)
+[11:02] <berkin> thanks for all your help!
+[11:02] <fijal> arigato: ah ok :)
+[11:02] <fijal> berkin: we're looking forward to work together
+[11:02] <fijal> (well myself at least) one way or another
+[11:02] <berkin> fijal: yes, we're very excited as well
+[11:02] <fijal> the point of gsoc is usually so people stay in the community
+[11:02] <fijal> if you gonna stay anyway, that's very good :)
+[11:03] == dmlockhart [~dmlockhar@up-368-brg-lockhart.csl.cornell.edu] has quit [Ping timeout: 250 seconds]
+[11:03] <berkin> sounds good, awesome :)
+[11:03] <berkin> need to run to a meeting now, i'll ttyl

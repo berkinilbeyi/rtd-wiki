@@ -1,0 +1,227 @@
+==========================================================================
+inner
+==========================================================================
+
+num_cycles          = 249195
+num_insts           = 28093
+sim_cycles          = 628990
+elapsed_time        = 112.798403978
+sim_cycles_per_sec  = 5576.23138108
+stats.core0.branch_res = 4614
+stats.core0.fu_use_muldiv = 1057
+stats.core0.lane0.fu_use_fp = 16384
+stats.core0.lane0.no_inst = 1024
+stats.core0.lane0.num_cycles = 203105
+stats.core0.lane0.num_insts = 142356
+stats.core0.lane0.stall = 59725
+stats.core0.lane0.stall_dx_to_w_full = 7359
+stats.core0.lane0.stall_fu_struct = 1905
+stats.core0.lane0.stall_raw = 50461
+stats.core0.lane0.stall_raw_fu = 24576
+stats.core0.lane0.stall_raw_ld = 25885
+
+stats.core0.lane1.fu_use_fp = 16384
+stats.core0.lane1.no_inst = 1024
+stats.core0.lane1.num_cycles = 203287
+stats.core0.lane1.num_insts = 142349
+stats.core0.lane1.stall = 59914
+stats.core0.lane1.stall_dx_to_w_full = 7359
+stats.core0.lane1.stall_fu_struct = 1977
+stats.core0.lane1.stall_raw = 50578
+stats.core0.lane1.stall_raw_fu = 24576
+stats.core0.lane1.stall_raw_ld = 26002
+
+stats.core0.lane2.fu_use_fp = 16384
+stats.core0.lane2.no_inst = 1024
+stats.core0.lane2.num_cycles = 203456
+stats.core0.lane2.num_insts = 142352
+stats.core0.lane2.stall = 60080
+stats.core0.lane2.stall_dx_to_w_full = 7329
+stats.core0.lane2.stall_fu_struct = 2086
+stats.core0.lane2.stall_raw = 50665
+stats.core0.lane2.stall_raw_fu = 24576
+stats.core0.lane2.stall_raw_ld = 26089
+
+stats.core0.lane3.fu_use_fp = 16384
+stats.core0.lane3.no_inst = 1024
+stats.core0.lane3.num_cycles = 203808
+stats.core0.lane3.num_insts = 142348
+stats.core0.lane3.stall = 60436
+stats.core0.lane3.stall_dx_to_w_full = 7362
+stats.core0.lane3.stall_fu_struct = 2064
+stats.core0.lane3.stall_raw = 51010
+stats.core0.lane3.stall_raw_fu = 24576
+stats.core0.lane3.stall_raw_ld = 26434
+
+stats.core0.lane_conf = 17408
+stats.core0.lane_job = 209242
+stats.core0.no_inst = 6
+stats.core0.num_cycles = 249195
+stats.core0.num_insts = 10685
+stats.core0.stall = 7240
+stats.core0.stall_amo = 0
+stats.core0.stall_dmem_load_full = 768
+stats.core0.stall_dmem_store_full = 105
+stats.core0.stall_dx_to_w_full = 2
+stats.core0.stall_raw = 6365
+stats.core0.stall_raw_fu = 5125
+stats.core0.stall_raw_ld = 1240
+
+stats.dcache0.hits = 132921
+stats.dcache0.misses = 208
+
+stats.icache0.hits = 32705
+stats.icache0.misses = 2
+
+==========================================================================
+middle
+==========================================================================
+
+num_cycles          = 198999
+num_insts           = 4285
+sim_cycles          = 528615
+elapsed_time        = 100.396965981
+sim_cycles_per_sec  = 5265.24875366
+stats.core0.branch_res = 646
+stats.core0.fu_use_muldiv = 33
+stats.core0.lane0.branch_res = 8160
+stats.core0.lane0.fu_use_fp = 16384
+stats.core0.lane0.fu_use_muldiv = 256
+stats.core0.lane0.no_inst = 32
+stats.core0.lane0.num_cycles = 191625
+stats.core0.lane0.num_insts = 140608
+stats.core0.lane0.stall = 42825
+stats.core0.lane0.stall_dx_to_w_full = 276
+stats.core0.lane0.stall_fu_struct = 86
+stats.core0.lane0.stall_raw = 42463
+stats.core0.lane0.stall_raw_fu = 25856
+stats.core0.lane0.stall_raw_ld = 16607
+
+stats.core0.lane1.branch_res = 8160
+stats.core0.lane1.fu_use_fp = 16384
+stats.core0.lane1.fu_use_muldiv = 256
+stats.core0.lane1.no_inst = 32
+stats.core0.lane1.num_cycles = 191726
+stats.core0.lane1.num_insts = 140608
+stats.core0.lane1.stall = 42926
+stats.core0.lane1.stall_dx_to_w_full = 273
+stats.core0.lane1.stall_fu_struct = 142
+stats.core0.lane1.stall_raw = 42511
+stats.core0.lane1.stall_raw_fu = 25856
+stats.core0.lane1.stall_raw_ld = 16655
+
+stats.core0.lane2.branch_res = 8160
+stats.core0.lane2.fu_use_fp = 16384
+stats.core0.lane2.fu_use_muldiv = 256
+stats.core0.lane2.no_inst = 32
+stats.core0.lane2.num_cycles = 191749
+stats.core0.lane2.num_insts = 140608
+stats.core0.lane2.stall = 42949
+stats.core0.lane2.stall_dx_to_w_full = 271
+stats.core0.lane2.stall_fu_struct = 130
+stats.core0.lane2.stall_raw = 42548
+stats.core0.lane2.stall_raw_fu = 25856
+stats.core0.lane2.stall_raw_ld = 16692
+
+stats.core0.lane3.branch_res = 8160
+stats.core0.lane3.fu_use_fp = 16384
+stats.core0.lane3.fu_use_muldiv = 256
+stats.core0.lane3.no_inst = 32
+stats.core0.lane3.num_cycles = 191803
+stats.core0.lane3.num_insts = 140608
+stats.core0.lane3.stall = 43003
+stats.core0.lane3.stall_dx_to_w_full = 276
+stats.core0.lane3.stall_fu_struct = 133
+stats.core0.lane3.stall_raw = 42594
+stats.core0.lane3.stall_raw_fu = 25856
+stats.core0.lane3.stall_raw_ld = 16738
+
+stats.core0.lane_conf = 704
+stats.core0.lane_job = 191942
+stats.core0.no_inst = 6
+stats.core0.num_cycles = 198999
+stats.core0.num_insts = 3581
+stats.core0.stall = 2120
+stats.core0.stall_amo = 0
+stats.core0.stall_dmem_load_full = 768
+stats.core0.stall_dmem_store_full = 105
+stats.core0.stall_dx_to_w_full = 2
+stats.core0.stall_raw = 1245
+stats.core0.stall_raw_fu = 5
+stats.core0.stall_raw_ld = 1240
+
+stats.dcache0.hits = 132921
+stats.dcache0.misses = 208
+
+stats.icache0.hits = 4929
+stats.icache0.misses = 2
+
+==========================================================================
+transparent
+==========================================================================
+
+bi45@brg-05:/work/bits0/bi45/vc-tmp/git-parc/parc/cl$ ./cl-proc-sim --stats --num-lanes 0 --num-cores 1 --num-threads 1 --share-fus -v 0 warshall --impl tloops --warmup
+Unknown opcode encountered! 0x481d1008
+Unknown opcode encountered! 0xd0400001
+Unknown opcode encountered! 0x481ce008
+Unsupported SYSCALL: 5
+Unsupported SYSCALL: 5
+Unsupported SYSCALL: 5
+SYSCALL_exit
+status: 0
+Status message received 0
+num_cycles          = 803985
+num_insts           = 565757
+sim_cycles          = 1738508
+elapsed_time        = 159.029456854
+sim_cycles_per_sec  = 10931.9872833
+stats.core0.branch_res = 66150
+stats.core0.fu_use_fp = 65536
+stats.core0.fu_use_muldiv = 1057
+stats.core0.no_inst = 6
+stats.core0.num_cycles = 803985
+stats.core0.num_insts = 565757
+stats.core0.stall = 172072
+stats.core0.stall_amo = 0
+stats.core0.stall_dmem_load_full = 768
+stats.core0.stall_dmem_store_full = 105
+stats.core0.stall_dx_to_w_full = 994
+stats.core0.stall_raw = 170205
+stats.core0.stall_raw_fu = 103429
+stats.core0.stall_raw_ld = 66776
+
+stats.dcache0.hits = 132921
+stats.dcache0.misses = 208
+
+stats.icache0.hits = 631905
+stats.icache0.misses = 2
+
+==========================================================================
+scalar
+==========================================================================
+num_cycles          = 804916
+num_insts           = 437728
+sim_cycles          = 1740328
+elapsed_time        = 161.492963076
+sim_cycles_per_sec  = 10776.4943243
+stats.core0.branch_res = 66054
+stats.core0.fu_use_fp = 65536
+stats.core0.fu_use_muldiv = 1025
+stats.core0.no_inst = 6
+stats.core0.num_cycles = 804916
+stats.core0.num_insts = 437728
+stats.core0.stall = 301128
+stats.core0.stall_amo = 0
+stats.core0.stall_dmem_load_full = 768
+stats.core0.stall_dmem_store_full = 105
+stats.core0.stall_dx_to_w_full = 1026
+stats.core0.stall_raw = 299229
+stats.core0.stall_raw_fu = 232453
+stats.core0.stall_raw_ld = 66776
+
+stats.dcache0.hits = 132921
+stats.dcache0.misses = 208
+
+stats.icache0.hits = 503780
+stats.icache0.misses = 2
+

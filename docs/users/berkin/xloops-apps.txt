@@ -1,0 +1,189 @@
+==========================================================================
+XLOOPS apps
+==========================================================================
+
+apps to look into:
+  bintree, (complete, but is it worth adding?)
+  fir
+  pbbs-dr (missing parallel impl)
+  covariance (small, also not 100% sure about data gen+verification)
+  lu
+  wc (uses while)
+
+bfs
+  scalar
+  tloops
+
+bintree
+  description: binary tree construction. Relatively small app, but shows
+               where for.m can shine, because there should be few
+               conflicts. 
+  scalar:
+  tloops: for.m
+
+covariance
+  description: covariance. Not sure what exactly this is.
+  scalar
+  tloops: contains two for.u's one for.r
+
+kmeans
+  scalar
+  tloops
+
+rgb2cmyk
+  scalar
+  tloops
+
+rsort
+  scalar
+  tloops
+
+sgemm
+  description: Sgemm is similar to symm, it's spending a lot of cycles due
+               to RAW dependencies due to functional units. MT or more
+               lanes would help.
+  scalar
+  tloops
+  tloops-opt
+
+strsearch
+  scalar
+  tloops
+
+symm
+  description:
+               In the for.u version of the app, the speedup is less than
+               o3. The stats indicate that the lanes are stalling
+               primarily due to RAW dependencies due to LLFUs. More lanes
+               and/or multithreading should help here to better utilize
+               the functional units. O3 is getting better performance
+               because it can find and execute independent work.
+  scalar
+  tloops:     for.u
+  tloops-reg: for.r
+
+warshall
+  scalar
+  tloops: for.u
+  tloops: for.m
+
+viterbi
+  description:
+               Viterbi is only slightly faster than o3 with speedup around
+               2.6X. The loop execution is the significant chunk of the
+               overall num cycles (921k/1035k). Stalls 280k cycles on
+               dx_to_w queue. Seems like this suffers from back to back
+               stores. Changing the arbitration scheme to dynamic
+               helps reduce this to 130-180k, but then raw stalls due to
+               loads increases. Overall seems to be memory bandwidth
+               limited.
+               With dynamic: 1046k
+               With dynamic + 4 banks: 956k
+               Hypothesis: Viterbi suffers from burstiness of memory.
+               Even if you use dynamic arbitration, there isn't an
+               arrangement that gives proper interleaving of instructions
+               without stalls due to memory port. I suspect more lanes
+               or multithreading would increase the performance.
+               Looking at older results, seems like multithreading
+               actually seems to hurt. Not sure why. Increasing the number
+               of lanes marginally improves the performance, which should
+               be finally be memory bandwidth limited.
+               Also looking at the line trace with multiple banks, the
+               traffic in each bank still looks bursty. Maybe a
+               non-interleaved cache would be better? Or iteration index
+               shuffling?
+               Concluding thoughts: Viterbi scalar uses relatively high
+               memory throughput, and as we paralellize, we get
+               diminishing returns due to momentary bottlenecks and
+               burstiness. Even having multiple cache banks doesn't help
+               that much because there is still burstiness at per-bank
+               level due to the nature of the app. In general more
+               decoupling both in the processor and in the memory system
+               in the form of non-blocking caches would help here.
+  scalar
+  tloops
+
+mibench-adpcmdec
+  scalar
+  tloops
+  tloops-opt
+
+dither
+  scalar
+  tloops          (doesn't work)
+  tloops-reg
+  tloops-reg-opt
+  tloops-mem
+
+sha
+  scalar
+  tloops -- doesn't work due to register dependency out of the xloop
+            region that is not really a inter-iteration dependency
+  tloops-opt
+
+stencil
+  scalar
+  tloops
+
+bintree
+  scalar
+  tloops
+
+heapsort
+  description: First heapifies the array. Then start getting the head of
+               the heap, while preserving the heap property. To preserve
+               the heap property, puts the displaced element, and let it
+               trickle down back to the heap. This is an inplace sort
+  scalar
+  tloops: Two for.m loops, one for initial heapifying, the second for
+          getting elements. Elements touched are often different, so can
+          get decent speedup.
+
+huffman
+  scalar
+  tloops
+
+knapsack
+  description: Unbounded knapsack problem. This means we can add unlimited
+               number of items to the knapsack. We increase the capacity
+               of our knapsack by one every iteration, and depending on
+               the weights of the elements, we need to look back (smaller
+               knapsack sizes) by that far. So the likelihood of
+               collisions are data dependent, depending on how large and
+               small the weights are. Two options are as following:
+               --weights small
+               --weights large
+               Note that the scalar version first iterated over the
+               weights and then items to consider. However, tagging this
+               outside loop causes too much speculative loads and stores,
+               filling finite load store buffers. For the xloops versions,
+               instead we're flipping these two loops to make the for.m
+               the inner loop.
+  scalar
+  tloops: for.m, performance data dependent.
+
+dynprog
+  description: From polybench. Changed the dataset to use random inputs.
+               Not data dependent.
+  scalar
+  tloops: for.m, doesn't get much speedup due to a lot of squashing. Reuse
+          distance is too close and larger iteration indexes have more work
+
+pbbs-mm
+  description: Maximal matching, from PBBS. Morph algorithm, where it
+               tries to find a valid matching in a graph.
+               To run, need load input from file:
+               % ./pbbs-mm --input-file $APPS/pbbs-mm/pbbs-mm-2dgrid-e-1000.dat
+               There are two more datasets in pbbs-mm, but didn't see much
+               of a difference in terms of performance.
+  scalar: Straightforward
+  tloops: for.orm. Almost identical to scalar. Because the vertices it
+          tries to add to matching are often far away, gives good
+          performance. Register dependency is due to an array pointer to
+          the matchings we have last placed (compacting array). Note that
+          to support this app, we had to enable conditional register
+          transfers, where registers not updated by certain pc need to be
+          transferred to the next lane. Gets good speedup because register
+          and memory dependencies can be overlapped, also the vertices are
+          often far away, so there are only few squashes. Also, we can use
+          for.ua (atomic) for this.

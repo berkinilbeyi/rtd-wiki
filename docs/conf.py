@@ -8,7 +8,7 @@ source_parsers = {
   '.md': CommonMarkParser,
 }
 
-source_suffix = ['.md']
+source_suffix = ['.md', '.rst', '.txt']
 
 master_doc = 'README'
 
